@@ -298,7 +298,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let submenu = NSMenu()
         submenu.autoenablesItems = false
         for app in apps {
-            let marker = app.isWhitelisted ? localizer.t("menu.protected") : app.riskLevel.localizedName(localizer)
+            let marker = cleanupMarker(for: app)
             let item = NSMenuItem(
                 title: "\(app.displayName) - \(memorySummary(for: app)) - \(marker)",
                 action: nil,
@@ -319,6 +319,12 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         parent.image = symbolMenuIcon("macwindow")
         parent.submenu = submenu
         menu.addItem(parent)
+    }
+
+    private func cleanupMarker(for app: AppRuntimeState) -> String {
+        memoryPolicyEngine.shouldTerminate(app)
+            ? localizer.t("menu.cleanable")
+            : localizer.t("menu.notCleanable")
     }
 
     private func addWhitelistSubmenu() {

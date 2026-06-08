@@ -5,28 +5,6 @@ public enum RiskLevel: String, CaseIterable, Equatable {
     case low
     case medium
     case high
-
-    public var displayName: String {
-        switch self {
-        case .low:
-            return "Low Risk"
-        case .medium:
-            return "Medium Risk"
-        case .high:
-            return "High Risk"
-        }
-    }
-
-    public func localizedName(_ localizer: Localizer) -> String {
-        switch self {
-        case .low:
-            return localizer.t("risk.low")
-        case .medium:
-            return localizer.t("risk.medium")
-        case .high:
-            return localizer.t("risk.high")
-        }
-    }
 }
 
 public enum MemoryPressureLevel: String, Equatable {

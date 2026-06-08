@@ -127,30 +127,6 @@ public struct Localizer: Equatable {
             .de: "Kritisch",
             .fr: "Critique"
         ],
-        "risk.low": [
-            .en: "Low Risk",
-            .zhHans: "低风险",
-            .zhHant: "低風險",
-            .ja: "低リスク",
-            .de: "Niedriges Risiko",
-            .fr: "Risque faible"
-        ],
-        "risk.medium": [
-            .en: "Medium Risk",
-            .zhHans: "中风险",
-            .zhHant: "中風險",
-            .ja: "中リスク",
-            .de: "Mittleres Risiko",
-            .fr: "Risque moyen"
-        ],
-        "risk.high": [
-            .en: "High Risk",
-            .zhHans: "高风险",
-            .zhHant: "高風險",
-            .ja: "高リスク",
-            .de: "Hohes Risiko",
-            .fr: "Risque élevé"
-        ],
         "menu.triggerLevel": [
             .en: "Trigger Level",
             .zhHans: "触发级别",
@@ -233,16 +209,16 @@ public struct Localizer: Equatable {
         ],
         "menu.autoRelease": [
             .en: "Auto Clean When Over Limit",
-            .zhHans: "超限自动清理后台 App",
-            .zhHant: "超限自動清理背景 App",
+            .zhHans: "超限自动清理可清理 App",
+            .zhHant: "超限自動清理可清理 App",
             .ja: "上限超過時に背景アプリを整理",
             .de: "Bei Limitüberschreitung automatisch bereinigen",
             .fr: "Nettoyer automatiquement au dépassement"
         ],
         "dashboard.candidates": [
-            .en: "Background",
-            .zhHans: "后台",
-            .zhHant: "背景",
+            .en: "Cleanable",
+            .zhHans: "可清理",
+            .zhHant: "可清理",
             .ja: "背景",
             .de: "Hintergrund",
             .fr: "Arrière-plan"
@@ -272,9 +248,9 @@ public struct Localizer: Equatable {
             .fr: "Réglages..."
         ],
         "menu.releaseNow": [
-            .en: "Clean Background Apps Now",
-            .zhHans: "立即清理后台 App",
-            .zhHant: "立即清理背景 App",
+            .en: "Clean Apps Now",
+            .zhHans: "立即清理可清理 App",
+            .zhHant: "立即清理可清理 App",
             .ja: "背景アプリを今すぐ整理",
             .de: "Hintergrund-Apps jetzt bereinigen",
             .fr: "Nettoyer les apps en arrière-plan"
@@ -312,17 +288,17 @@ public struct Localizer: Equatable {
             .fr: "Ajouter %@ à la liste blanche"
         ],
         "menu.noSafeCandidates": [
-            .en: "No eligible background apps",
-            .zhHans: "暂无后台 App",
-            .zhHant: "暫無背景 App",
+            .en: "No cleanable apps",
+            .zhHans: "暂无可清理 App",
+            .zhHant: "暫無可清理 App",
             .ja: "対象の背景アプリはありません",
             .de: "Keine geeigneten Hintergrund-Apps",
             .fr: "Aucune app admissible en arrière-plan"
         ],
         "menu.releaseCandidates": [
-            .en: "Background Apps",
-            .zhHans: "后台 App",
-            .zhHant: "背景 App",
+            .en: "Cleanable Apps",
+            .zhHans: "可清理 App",
+            .zhHant: "可清理 App",
             .ja: "背景アプリ",
             .de: "Hintergrund-Apps",
             .fr: "Apps en arrière-plan"
@@ -335,13 +311,21 @@ public struct Localizer: Equatable {
             .de: "%d Kindprozesse",
             .fr: "%d processus enfants"
         ],
-        "menu.protected": [
-            .en: "Protected",
-            .zhHans: "已保护",
-            .zhHant: "已保護",
-            .ja: "保護済み",
-            .de: "Geschützt",
-            .fr: "Protégée"
+        "menu.cleanable": [
+            .en: "Cleanable",
+            .zhHans: "可清理",
+            .zhHant: "可清理",
+            .ja: "清理可",
+            .de: "Bereinigbar",
+            .fr: "Nettoyable"
+        ],
+        "menu.notCleanable": [
+            .en: "Not Cleanable",
+            .zhHans: "不可清理",
+            .zhHant: "不可清理",
+            .ja: "清理しない",
+            .de: "Wird nicht bereinigt",
+            .fr: "Non nettoyée"
         ],
         "menu.noBackgroundApps": [
             .en: "No background regular apps",
@@ -352,9 +336,9 @@ public struct Localizer: Equatable {
             .fr: "Aucune app standard en arrière-plan"
         ],
         "menu.backgroundApps": [
-            .en: "Background Apps",
-            .zhHans: "后台应用",
-            .zhHant: "背景 App",
+            .en: "All Background Apps",
+            .zhHans: "全部后台应用",
+            .zhHant: "全部背景 App",
             .ja: "バックグラウンドアプリ",
             .de: "Hintergrund-Apps",
             .fr: "Apps en arrière-plan"
@@ -456,9 +440,9 @@ public struct Localizer: Equatable {
             .fr: "Limites de déclenchement"
         ],
         "settings.autoReleaseCheckbox": [
-            .en: "Auto clean background apps when over limit",
-            .zhHans: "超限后自动清理后台 App",
-            .zhHant: "超限後自動清理背景 App",
+            .en: "Auto clean eligible apps when over limit",
+            .zhHans: "超限后自动清理可清理 App",
+            .zhHant: "超限後自動清理可清理 App",
             .ja: "上限超過時に背景アプリを自動整理",
             .de: "Hintergrund-Apps bei Limitüberschreitung bereinigen",
             .fr: "Nettoyer les apps en arrière-plan au dépassement"
@@ -529,8 +513,8 @@ public struct Localizer: Equatable {
         ],
         "settings.minimumAppMemory": [
             .en: "Minimum app memory",
-            .zhHans: "后台 App 最小内存",
-            .zhHant: "背景 App 最小記憶體",
+            .zhHans: "可清理 App 最小内存",
+            .zhHant: "可清理 App 最小記憶體",
             .ja: "候補アプリの最小メモリ",
             .de: "Min. App-Speicher",
             .fr: "Mémoire app minimale"
@@ -752,9 +736,9 @@ public struct Localizer: Equatable {
             .fr: "Fermeture forcée désactivée."
         ],
         "event.manualRelease": [
-            .en: "Manual background app cleanup requested.",
-            .zhHans: "已手动清理后台 App。",
-            .zhHant: "已手動清理背景 App。",
+            .en: "Manual eligible app cleanup requested.",
+            .zhHans: "已手动清理可清理 App。",
+            .zhHant: "已手動清理可清理 App。",
             .ja: "背景アプリの手動整理を要求しました。",
             .de: "Manuelle Bereinigung von Hintergrund-Apps angefordert.",
             .fr: "Nettoyage manuel des apps en arrière-plan demandé."
@@ -808,9 +792,9 @@ public struct Localizer: Equatable {
             .fr: "Nettoyage automatique désactivé ; événement ignoré."
         ],
         "event.noEligibleApps": [
-            .en: "No eligible background apps.",
-            .zhHans: "没有符合条件的后台应用。",
-            .zhHant: "沒有符合條件的背景 App。",
+            .en: "No cleanable apps.",
+            .zhHans: "没有可清理 App。",
+            .zhHant: "沒有可清理 App。",
             .ja: "対象のバックグラウンドアプリはありません。",
             .de: "Keine geeigneten Hintergrund-Apps.",
             .fr: "Aucune app admissible en arrière-plan."
