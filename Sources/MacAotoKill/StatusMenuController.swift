@@ -201,10 +201,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
         let appName = app.localizedName ?? bundleID
         let item: NSMenuItem
-        if whitelistStore.isDefaultProtected(bundleID) {
-            item = NSMenuItem(title: localizer.t("menu.protectedByDefault", appName), action: nil, keyEquivalent: "")
-            item.isEnabled = false
-        } else if whitelistStore.contains(bundleID) {
+        if whitelistStore.contains(bundleID) {
             item = NSMenuItem(
                 title: localizer.t("menu.removeAppFromWhitelist", appName),
                 action: #selector(removeWhitelistItem(_:)),
@@ -301,14 +298,14 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
     private func addWhitelistSubmenu() {
         let submenu = NSMenu()
-        let userIDs = whitelistStore.userBundleIDs.sorted()
+        let bundleIDs = whitelistStore.allBundleIDs.sorted()
 
-        if userIDs.isEmpty {
+        if bundleIDs.isEmpty {
             let item = NSMenuItem(title: localizer.t("menu.noWhitelistItems"), action: nil, keyEquivalent: "")
             item.isEnabled = false
             submenu.addItem(item)
         } else {
-            for bundleID in userIDs {
+            for bundleID in bundleIDs {
                 let item = NSMenuItem(
                     title: localizer.t("menu.removeBundleID", bundleID),
                     action: #selector(removeWhitelistItem(_:)),
@@ -320,15 +317,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
                 submenu.addItem(item)
             }
         }
-
-        submenu.addItem(.separator())
-        let defaultsItem = NSMenuItem(
-            title: localizer.t("menu.defaultProtected", WhitelistStore.defaultProtectedBundleIDs.count),
-            action: nil,
-            keyEquivalent: ""
-        )
-        defaultsItem.isEnabled = false
-        submenu.addItem(defaultsItem)
 
         let parent = NSMenuItem(title: localizer.t("menu.whitelist"), action: nil, keyEquivalent: "")
         parent.image = symbolMenuIcon("checkmark.shield")
@@ -405,11 +393,22 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if settingsWindowController == nil {
             settingsWindowController = SettingsWindowController(
                 settingsStore: settingsStore,
+                whitelistStore: whitelistStore,
                 memoryProvider: { SystemMemoryMonitor.capture() },
                 onChange: { [weak self] in
                     self?.refreshSnapshot(performAutomaticRelease: true)
                     guard let self else { return }
                     self.eventLog.append(self.localizer.t("event.settingsUpdated"))
+                },
+                onWhitelistAdded: { [weak self] bundleID in
+                    guard let self else { return }
+                    self.eventLog.append(self.localizer.t("event.addedWhitelist", bundleID))
+                    self.refreshSnapshot(performAutomaticRelease: false)
+                },
+                onWhitelistRemoved: { [weak self] bundleID in
+                    guard let self else { return }
+                    self.eventLog.append(self.localizer.t("event.removedWhitelist", bundleID))
+                    self.refreshSnapshot(performAutomaticRelease: false)
                 },
                 onExportLogs: { [weak self] in
                     self?.exportLogs()

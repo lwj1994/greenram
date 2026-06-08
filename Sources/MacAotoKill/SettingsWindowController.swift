@@ -7,14 +7,20 @@ final class SettingsWindowController: NSWindowController {
 
     init(
         settingsStore: SettingsStore,
+        whitelistStore: WhitelistStore,
         memoryProvider: @escaping () -> SystemMemorySnapshot,
         onChange: @escaping () -> Void,
+        onWhitelistAdded: @escaping (String) -> Void,
+        onWhitelistRemoved: @escaping (String) -> Void,
         onExportLogs: @escaping () -> Void
     ) {
         self.viewModel = SettingsViewModel(
             settingsStore: settingsStore,
+            whitelistStore: whitelistStore,
             memoryProvider: memoryProvider,
             onChange: onChange,
+            onWhitelistAdded: onWhitelistAdded,
+            onWhitelistRemoved: onWhitelistRemoved,
             onExportLogs: onExportLogs
         )
 
@@ -65,8 +71,11 @@ final class SettingsWindowController: NSWindowController {
 
 private final class SettingsViewModel: ObservableObject {
     private let settingsStore: SettingsStore
+    private let whitelistStore: WhitelistStore
     private let memoryProvider: () -> SystemMemorySnapshot
     private let onChange: () -> Void
+    private let onWhitelistAdded: (String) -> Void
+    private let onWhitelistRemoved: (String) -> Void
     private let onExportLogs: () -> Void
 
     @Published var memorySnapshot: SystemMemorySnapshot
@@ -75,21 +84,34 @@ private final class SettingsViewModel: ObservableObject {
     @Published var swapLimitEnabled: Bool
     @Published var swapLimitGB: Double
     @Published var minimumBackgroundMinutes: Double
+    @Published var whitelistBundleIDs: [String]
+    @Published var newWhitelistBundleID = ""
     @Published var isResetConfirmationPresented = false
 
     var localizer: Localizer {
         Localizer(languageCode: languageCode)
     }
 
+    var canAddWhitelistBundleID: Bool {
+        let bundleID = normalizedNewWhitelistBundleID
+        return !bundleID.isEmpty && !whitelistBundleIDs.contains(bundleID)
+    }
+
     init(
         settingsStore: SettingsStore,
+        whitelistStore: WhitelistStore,
         memoryProvider: @escaping () -> SystemMemorySnapshot,
         onChange: @escaping () -> Void,
+        onWhitelistAdded: @escaping (String) -> Void,
+        onWhitelistRemoved: @escaping (String) -> Void,
         onExportLogs: @escaping () -> Void
     ) {
         self.settingsStore = settingsStore
+        self.whitelistStore = whitelistStore
         self.memoryProvider = memoryProvider
         self.onChange = onChange
+        self.onWhitelistAdded = onWhitelistAdded
+        self.onWhitelistRemoved = onWhitelistRemoved
         self.onExportLogs = onExportLogs
         self.memorySnapshot = memoryProvider()
         self.languageCode = settingsStore.languageCode
@@ -97,6 +119,7 @@ private final class SettingsViewModel: ObservableObject {
         self.swapLimitEnabled = settingsStore.swapLimitEnabled
         self.swapLimitGB = Double(settingsStore.swapLimitBytes) / Double(1024 * 1024 * 1024)
         self.minimumBackgroundMinutes = settingsStore.minimumBackgroundDuration / 60
+        self.whitelistBundleIDs = whitelistStore.allBundleIDs.sorted()
     }
 
     func load() {
@@ -105,6 +128,7 @@ private final class SettingsViewModel: ObservableObject {
         swapLimitEnabled = settingsStore.swapLimitEnabled
         swapLimitGB = Double(settingsStore.swapLimitBytes) / Double(1024 * 1024 * 1024)
         minimumBackgroundMinutes = settingsStore.minimumBackgroundDuration / 60
+        reloadWhitelist()
     }
 
     func refreshMemory() {
@@ -127,8 +151,36 @@ private final class SettingsViewModel: ObservableObject {
         onChange()
     }
 
+    func isDefaultWhitelistSeed(_ bundleID: String) -> Bool {
+        whitelistStore.isDefaultProtected(bundleID)
+    }
+
+    func addWhitelistBundleID() {
+        let bundleID = normalizedNewWhitelistBundleID
+        guard canAddWhitelistBundleID else { return }
+
+        whitelistStore.add(bundleID)
+        newWhitelistBundleID = ""
+        reloadWhitelist()
+        onWhitelistAdded(bundleID)
+    }
+
+    func removeWhitelistBundleID(_ bundleID: String) {
+        whitelistStore.remove(bundleID)
+        reloadWhitelist()
+        onWhitelistRemoved(bundleID)
+    }
+
     func exportLogs() {
         onExportLogs()
+    }
+
+    private var normalizedNewWhitelistBundleID: String {
+        newWhitelistBundleID.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func reloadWhitelist() {
+        whitelistBundleIDs = whitelistStore.allBundleIDs.sorted()
     }
 }
 
@@ -145,6 +197,7 @@ private struct SettingsView: View {
                 header
                 memorySection
                 thresholdSection
+                whitelistSection
                 languageSection
                 logSection
                 footer
@@ -296,6 +349,47 @@ private struct SettingsView: View {
                 Spacer()
             }
             .padding(.vertical, 16)
+        }
+    }
+
+    private var whitelistSection: some View {
+        settingsPanel(title: localizer.t("menu.whitelist"), systemImage: "checkmark.shield", color: Color(nsColor: .systemTeal)) {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    TextField(localizer.t("settings.bundleIDPlaceholder"), text: $viewModel.newWhitelistBundleID)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                        .onSubmit {
+                            viewModel.addWhitelistBundleID()
+                        }
+
+                    Button {
+                        viewModel.addWhitelistBundleID()
+                    } label: {
+                        Label(localizer.t("settings.addBundleID"), systemImage: "plus")
+                    }
+                    .disabled(!viewModel.canAddWhitelistBundleID)
+                }
+                .padding(.vertical, 14)
+
+                Divider()
+
+                if viewModel.whitelistBundleIDs.isEmpty {
+                    Text(localizer.t("menu.noWhitelistItems"))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 14)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(viewModel.whitelistBundleIDs, id: \.self) { bundleID in
+                            whitelistRow(bundleID)
+                            if bundleID != viewModel.whitelistBundleIDs.last {
+                                Divider()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -486,6 +580,34 @@ private struct SettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 16)
+    }
+
+    private func whitelistRow(_ bundleID: String) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(bundleID)
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                if viewModel.isDefaultWhitelistSeed(bundleID) {
+                    Text(localizer.t("settings.defaultWhitelistSeed"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                viewModel.removeWhitelistBundleID(bundleID)
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .help(localizer.t("menu.removeBundleID", bundleID))
+        }
+        .padding(.vertical, 10)
     }
 
     private func statusColor(_ isExceeded: Bool) -> Color {

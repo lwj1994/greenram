@@ -24,7 +24,7 @@ public final class MemoryPolicyEngine {
     public var configuration: MemoryPolicyConfiguration
     private weak var terminator: AppTerminating?
     private weak var logger: EventLogging?
-    private var recentQuitRequestsByPID: [pid_t: Date] = [:]
+    private var recentQuitRequestsByBundleID: [String: Date] = [:]
     private let duplicateQuitCooldown: TimeInterval = 10 * 60
     private let localizerProvider: () -> Localizer
 
@@ -65,7 +65,7 @@ public final class MemoryPolicyEngine {
         }
 
         let targets = candidates(for: states, now: now)
-            .filter { !hasRecentQuitRequest(for: $0.pid, now: now) }
+            .filter { !hasRecentQuitRequest(for: $0.bundleID, now: now) }
             .prefix(configuration.maxAppsPerSweep)
 
         guard !targets.isEmpty else {
@@ -74,7 +74,7 @@ public final class MemoryPolicyEngine {
         }
 
         for app in targets {
-            recentQuitRequestsByPID[app.pid] = now
+            recentQuitRequestsByBundleID[app.bundleID] = now
             if configuration.forceTerminateImmediately {
                 terminator?.forceQuit(app)
             } else {
@@ -111,8 +111,8 @@ public final class MemoryPolicyEngine {
         app.backgroundDuration(now: now)
     }
 
-    private func hasRecentQuitRequest(for pid: pid_t, now: Date) -> Bool {
-        guard let lastRequestedAt = recentQuitRequestsByPID[pid] else { return false }
+    private func hasRecentQuitRequest(for bundleID: String, now: Date) -> Bool {
+        guard let lastRequestedAt = recentQuitRequestsByBundleID[bundleID] else { return false }
         return now.timeIntervalSince(lastRequestedAt) < duplicateQuitCooldown
     }
 }

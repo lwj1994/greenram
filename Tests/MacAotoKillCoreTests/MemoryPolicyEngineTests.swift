@@ -93,6 +93,62 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(terminator.forceQuitApps.map(\.displayName), ["Background App"])
     }
 
+    func testDuplicateQuitCooldownUsesBundleID() {
+        let now = Date()
+        let terminator = TerminatorSpy()
+        let logger = LoggerSpy()
+        let engine = MemoryPolicyEngine(
+            configuration: MemoryPolicyConfiguration(),
+            terminator: terminator,
+            logger: logger
+        )
+        let firstInstance = makeApp(
+            pid: 1_000,
+            bundleID: "test.same-app",
+            name: "Same App",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+        let relaunchedInstance = makeApp(
+            pid: 2_000,
+            bundleID: "test.same-app",
+            name: "Same App",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        engine.handleAutomaticRelease(states: [firstInstance], now: now)
+        engine.handleAutomaticRelease(states: [relaunchedInstance], now: now.addingTimeInterval(60))
+
+        XCTAssertEqual(terminator.forceQuitApps.map(\.pid), [1_000])
+    }
+
+    func testDuplicateQuitCooldownAllowsSamePIDWithDifferentBundleID() {
+        let now = Date()
+        let terminator = TerminatorSpy()
+        let logger = LoggerSpy()
+        let engine = MemoryPolicyEngine(
+            configuration: MemoryPolicyConfiguration(),
+            terminator: terminator,
+            logger: logger
+        )
+        let originalApp = makeApp(
+            pid: 1_000,
+            bundleID: "test.original",
+            name: "Original",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+        let reusedPIDApp = makeApp(
+            pid: 1_000,
+            bundleID: "test.reused-pid",
+            name: "Reused PID",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        engine.handleAutomaticRelease(states: [originalApp], now: now)
+        engine.handleAutomaticRelease(states: [reusedPIDApp], now: now.addingTimeInterval(60))
+
+        XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
+    }
+
     private func makeEngine() -> MemoryPolicyEngine {
         MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(),
@@ -103,6 +159,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
 
     private func makeApp(
         pid: pid_t = 999,
+        bundleID: String? = nil,
         name: String,
         lastBackgroundAt: Date?,
         memoryBytes: UInt64 = 512 * 1024 * 1024,
@@ -111,7 +168,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
     ) -> AppRuntimeState {
         AppRuntimeState(
             pid: pid,
-            bundleID: "test.\(name.replacingOccurrences(of: " ", with: "-"))",
+            bundleID: bundleID ?? "test.\(name.replacingOccurrences(of: " ", with: "-"))",
             displayName: name,
             launchDate: nil,
             lastForegroundAt: nil,

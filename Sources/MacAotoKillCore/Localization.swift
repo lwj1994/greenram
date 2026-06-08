@@ -352,12 +352,12 @@ public struct Localizer: Equatable {
             .fr: "Apps en arrière-plan"
         ],
         "menu.noWhitelistItems": [
-            .en: "No custom whitelist items",
-            .zhHans: "没有自定义白名单",
-            .zhHant: "沒有自訂白名單",
-            .ja: "カスタム項目なし",
-            .de: "Keine eigenen Whitelist-Einträge",
-            .fr: "Aucune entrée personnalisée"
+            .en: "No whitelist items",
+            .zhHans: "没有白名单项",
+            .zhHant: "沒有白名單項目",
+            .ja: "ホワイトリスト項目なし",
+            .de: "Keine Whitelist-Einträge",
+            .fr: "Aucune entrée dans la liste blanche"
         ],
         "menu.removeBundleID": [
             .en: "Remove %@",
@@ -590,6 +590,30 @@ public struct Localizer: Equatable {
             .ja: "キャンセル",
             .de: "Abbrechen",
             .fr: "Annuler"
+        ],
+        "settings.addBundleID": [
+            .en: "Add",
+            .zhHans: "添加",
+            .zhHant: "新增",
+            .ja: "追加",
+            .de: "Hinzufügen",
+            .fr: "Ajouter"
+        ],
+        "settings.bundleIDPlaceholder": [
+            .en: "Bundle ID",
+            .zhHans: "Bundle ID",
+            .zhHant: "Bundle ID",
+            .ja: "Bundle ID",
+            .de: "Bundle ID",
+            .fr: "Bundle ID"
+        ],
+        "settings.defaultWhitelistSeed": [
+            .en: "Default item",
+            .zhHans: "默认项",
+            .zhHant: "預設項",
+            .ja: "既定項目",
+            .de: "Standardeintrag",
+            .fr: "Entrée par défaut"
         ],
         "settings.logs": [
             .en: "Logs",

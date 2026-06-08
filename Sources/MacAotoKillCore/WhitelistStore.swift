@@ -10,7 +10,8 @@ public final class WhitelistStore {
     ]
 
     private let defaults: UserDefaults
-    private let userWhitelistKey = "userWhitelistBundleIDs"
+    private let whitelistKey = "whitelistBundleIDs"
+    private let legacyUserWhitelistKey = "userWhitelistBundleIDs"
 
     public convenience init() {
         self.init(defaults: AppDefaults.make())
@@ -20,22 +21,45 @@ public final class WhitelistStore {
         self.defaults = defaults
     }
 
-    public var userBundleIDs: Set<String> {
+    public var bundleIDs: Set<String> {
         get {
-            Set(defaults.stringArray(forKey: userWhitelistKey) ?? [])
+            if let ids = defaults.stringArray(forKey: whitelistKey) {
+                return Set(ids)
+            }
+
+            let migrated = Self.defaultProtectedBundleIDs.union(
+                defaults.stringArray(forKey: legacyUserWhitelistKey) ?? []
+            )
+            defaults.set(Array(migrated).sorted(), forKey: whitelistKey)
+            return migrated
         }
         set {
-            defaults.set(Array(newValue).sorted(), forKey: userWhitelistKey)
+            defaults.set(Array(newValue).sorted(), forKey: whitelistKey)
+        }
+    }
+
+    public var userBundleIDs: Set<String> {
+        get {
+            bundleIDs.subtracting(Self.defaultProtectedBundleIDs)
+        }
+        set {
+            let currentDefaultBundleIDs = bundleIDs.intersection(Self.defaultProtectedBundleIDs)
+            bundleIDs = currentDefaultBundleIDs.union(newValue)
         }
     }
 
     public var allBundleIDs: Set<String> {
-        Self.defaultProtectedBundleIDs.union(userBundleIDs)
+        get {
+            bundleIDs
+        }
+        set {
+            bundleIDs = newValue
+        }
     }
 
     public func contains(_ bundleID: String?) -> Bool {
         guard let bundleID else { return true }
-        return allBundleIDs.contains(bundleID)
+        return bundleIDs.contains(bundleID)
     }
 
     public func isDefaultProtected(_ bundleID: String) -> Bool {
@@ -43,14 +67,14 @@ public final class WhitelistStore {
     }
 
     public func add(_ bundleID: String) {
-        var ids = userBundleIDs
+        var ids = bundleIDs
         ids.insert(bundleID)
-        userBundleIDs = ids
+        bundleIDs = ids
     }
 
     public func remove(_ bundleID: String) {
-        var ids = userBundleIDs
+        var ids = bundleIDs
         ids.remove(bundleID)
-        userBundleIDs = ids
+        bundleIDs = ids
     }
 }
