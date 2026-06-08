@@ -81,6 +81,22 @@ private struct WhitelistAppInfo: Identifiable {
     }
 }
 
+private struct IdleTimeAppInfo: Identifiable {
+    let bundleID: String
+    let displayName: String
+    let icon: NSImage
+
+    var id: String {
+        bundleID
+    }
+}
+
+private struct AppDisplayInfo {
+    let bundleID: String
+    let displayName: String
+    let icon: NSImage
+}
+
 private final class SettingsViewModel: ObservableObject {
     private let settingsStore: SettingsStore
     private let whitelistStore: WhitelistStore
@@ -96,9 +112,12 @@ private final class SettingsViewModel: ObservableObject {
     @Published var swapLimitEnabled: Bool
     @Published var swapLimitGB: Double
     @Published var minimumBackgroundMinutes: Double
+    @Published var appIdleTimeItems: [IdleTimeAppInfo]
     @Published var whitelistItems: [WhitelistAppInfo]
+    @Published var newIdleTimeBundleID = ""
     @Published var newWhitelistBundleID = ""
     @Published var isResetConfirmationPresented = false
+    private var idleTimeBundleIDs: [String]
     private var whitelistBundleIDs: [String]
 
     var localizer: Localizer {
@@ -108,6 +127,11 @@ private final class SettingsViewModel: ObservableObject {
     var canAddWhitelistBundleID: Bool {
         let bundleID = normalizedNewWhitelistBundleID
         return !bundleID.isEmpty && !whitelistBundleIDs.contains(bundleID)
+    }
+
+    var canAddIdleTimeBundleID: Bool {
+        let bundleID = normalizedNewIdleTimeBundleID
+        return !bundleID.isEmpty && !idleTimeBundleIDs.contains(bundleID)
     }
 
     init(
@@ -132,6 +156,9 @@ private final class SettingsViewModel: ObservableObject {
         self.swapLimitEnabled = settingsStore.swapLimitEnabled
         self.swapLimitGB = Double(settingsStore.swapLimitBytes) / Double(1024 * 1024 * 1024)
         self.minimumBackgroundMinutes = settingsStore.minimumBackgroundDuration / 60
+        let initialIdleTimeBundleIDs = settingsStore.minimumBackgroundDurationsByBundleID.keys.sorted()
+        self.idleTimeBundleIDs = initialIdleTimeBundleIDs
+        self.appIdleTimeItems = Self.makeIdleTimeItems(from: initialIdleTimeBundleIDs, store: whitelistStore)
         let initialBundleIDs = whitelistStore.allBundleIDs.sorted()
         self.whitelistBundleIDs = initialBundleIDs
         self.whitelistItems = Self.makeWhitelistItems(from: initialBundleIDs, store: whitelistStore)
@@ -143,6 +170,7 @@ private final class SettingsViewModel: ObservableObject {
         swapLimitEnabled = settingsStore.swapLimitEnabled
         swapLimitGB = Double(settingsStore.swapLimitBytes) / Double(1024 * 1024 * 1024)
         minimumBackgroundMinutes = settingsStore.minimumBackgroundDuration / 60
+        reloadIdleTimeItems()
         reloadWhitelist()
     }
 
@@ -163,6 +191,54 @@ private final class SettingsViewModel: ObservableObject {
     func resetDefaults() {
         settingsStore.resetMemoryPolicyDefaults()
         load()
+        onChange()
+    }
+
+    func addIdleTimeBundleID() {
+        let bundleID = normalizedNewIdleTimeBundleID
+        guard canAddIdleTimeBundleID else { return }
+
+        settingsStore.setMinimumBackgroundDuration(minimumBackgroundMinutes * 60, for: bundleID)
+        newIdleTimeBundleID = ""
+        reloadIdleTimeItems()
+        onChange()
+    }
+
+    func chooseIdleTimeApplications() {
+        let panel = NSOpenPanel()
+        panel.title = localizer.t("settings.chooseApp")
+        panel.prompt = localizer.t("settings.addBundleID")
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.treatsFilePackagesAsDirectories = false
+
+        let applicationsURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+        if FileManager.default.fileExists(atPath: applicationsURL.path) {
+            panel.directoryURL = applicationsURL
+        }
+        if let appBundleType = UTType("com.apple.application-bundle") {
+            panel.allowedContentTypes = [appBundleType]
+        }
+
+        guard panel.runModal() == .OK else { return }
+        addIdleTimeApplications(panel.urls)
+    }
+
+    func idleTimeMinutes(for bundleID: String) -> Double {
+        (settingsStore.minimumBackgroundDurationsByBundleID[bundleID] ?? settingsStore.minimumBackgroundDuration) / 60
+    }
+
+    func setIdleTimeMinutes(_ minutes: Double, for bundleID: String) {
+        let clampedMinutes = min(max(minutes, 1), 240)
+        settingsStore.setMinimumBackgroundDuration(clampedMinutes * 60, for: bundleID)
+        reloadIdleTimeItems()
+        onChange()
+    }
+
+    func removeIdleTimeBundleID(_ bundleID: String) {
+        settingsStore.setMinimumBackgroundDuration(nil, for: bundleID)
+        reloadIdleTimeItems()
         onChange()
     }
 
@@ -211,10 +287,44 @@ private final class SettingsViewModel: ObservableObject {
         newWhitelistBundleID.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var normalizedNewIdleTimeBundleID: String {
+        newIdleTimeBundleID.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func reloadIdleTimeItems() {
+        let bundleIDs = settingsStore.minimumBackgroundDurationsByBundleID.keys.sorted()
+        idleTimeBundleIDs = bundleIDs
+        appIdleTimeItems = Self.makeIdleTimeItems(from: bundleIDs, store: whitelistStore)
+    }
+
     private func reloadWhitelist() {
         let bundleIDs = whitelistStore.allBundleIDs.sorted()
         whitelistBundleIDs = bundleIDs
         whitelistItems = Self.makeWhitelistItems(from: bundleIDs, store: whitelistStore)
+    }
+
+    private func addIdleTimeApplications(_ urls: [URL]) {
+        var didChange = false
+        for url in urls {
+            guard
+                let appURL = Self.existingApplicationURL(from: url),
+                let bundle = Bundle(url: appURL),
+                let bundleID = Self.nonEmpty(bundle.bundleIdentifier)
+            else {
+                continue
+            }
+
+            let oldDuration = settingsStore.minimumBackgroundDurationsByBundleID[bundleID]
+            let newDuration = minimumBackgroundMinutes * 60
+            settingsStore.setMinimumBackgroundDuration(newDuration, for: bundleID)
+            whitelistStore.setAppPath(appURL.path, for: bundleID)
+            didChange = didChange || oldDuration != newDuration
+        }
+
+        reloadIdleTimeItems()
+        if didChange {
+            onChange()
+        }
     }
 
     private func addWhitelistApplications(_ urls: [URL]) {
@@ -237,6 +347,27 @@ private final class SettingsViewModel: ObservableObject {
         reloadWhitelist()
     }
 
+    private static func makeIdleTimeItems(from bundleIDs: [String], store: WhitelistStore) -> [IdleTimeAppInfo] {
+        bundleIDs
+            .map { makeIdleTimeItem(bundleID: $0, store: store) }
+            .sorted { lhs, rhs in
+                let nameOrder = lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName)
+                if nameOrder == .orderedSame {
+                    return lhs.bundleID.localizedCaseInsensitiveCompare(rhs.bundleID) == .orderedAscending
+                }
+                return nameOrder == .orderedAscending
+            }
+    }
+
+    private static func makeIdleTimeItem(bundleID: String, store: WhitelistStore) -> IdleTimeAppInfo {
+        let appInfo = makeAppDisplayInfo(bundleID: bundleID, store: store)
+        return IdleTimeAppInfo(
+            bundleID: appInfo.bundleID,
+            displayName: appInfo.displayName,
+            icon: appInfo.icon
+        )
+    }
+
     private static func makeWhitelistItems(from bundleIDs: [String], store: WhitelistStore) -> [WhitelistAppInfo] {
         bundleIDs
             .map { makeWhitelistItem(bundleID: $0, store: store) }
@@ -250,6 +381,16 @@ private final class SettingsViewModel: ObservableObject {
     }
 
     private static func makeWhitelistItem(bundleID: String, store: WhitelistStore) -> WhitelistAppInfo {
+        let appInfo = makeAppDisplayInfo(bundleID: bundleID, store: store)
+        return WhitelistAppInfo(
+            bundleID: appInfo.bundleID,
+            displayName: appInfo.displayName,
+            icon: appInfo.icon,
+            isDefaultSeed: store.isDefaultProtected(bundleID)
+        )
+    }
+
+    private static func makeAppDisplayInfo(bundleID: String, store: WhitelistStore) -> AppDisplayInfo {
         let cachedURL = store.appPath(for: bundleID).map { URL(fileURLWithPath: $0) }
         let appURL = cachedURL.flatMap(existingApplicationURL(from:))
             ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
@@ -262,11 +403,10 @@ private final class SettingsViewModel: ObservableObject {
             ?? fallbackDisplayName(for: bundleID)
         let icon = appIcon(runningApp: runningApp, appURL: appURL, bundleID: bundleID)
 
-        return WhitelistAppInfo(
+        return AppDisplayInfo(
             bundleID: bundleID,
             displayName: displayName,
-            icon: icon,
-            isDefaultSeed: store.isDefaultProtected(bundleID)
+            icon: icon
         )
     }
 
@@ -349,6 +489,7 @@ private struct SettingsView: View {
                 header
                 memorySection
                 thresholdSection
+                appIdleTimeSection
                 whitelistSection
                 languageSection
                 logSection
@@ -472,12 +613,62 @@ private struct SettingsView: View {
                 }
                 rowDivider
                 valueRow(
-                    title: localizer.t("settings.minimumBackgroundTime"),
+                    title: localizer.t("settings.defaultBackgroundTime"),
                     value: $viewModel.minimumBackgroundMinutes,
                     range: 1...240,
                     suffix: "min",
                     isExceeded: false
                 )
+            }
+        }
+    }
+
+    private var appIdleTimeSection: some View {
+        settingsPanel(title: localizer.t("settings.appIdleTimes"), systemImage: "timer", color: Color(nsColor: .systemOrange)) {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    Button {
+                        viewModel.chooseIdleTimeApplications()
+                    } label: {
+                        Label(localizer.t("settings.chooseApp"), systemImage: "folder")
+                    }
+
+                    TextField(localizer.t("settings.bundleIDPlaceholder"), text: $viewModel.newIdleTimeBundleID)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+                        .onSubmit {
+                            viewModel.addIdleTimeBundleID()
+                        }
+
+                    Button {
+                        viewModel.addIdleTimeBundleID()
+                    } label: {
+                        Label(localizer.t("settings.addBundleID"), systemImage: "plus")
+                    }
+                    .disabled(!viewModel.canAddIdleTimeBundleID)
+                }
+                .buttonStyle(.bordered)
+                .padding(.vertical, 14)
+
+                Divider()
+
+                if viewModel.appIdleTimeItems.isEmpty {
+                    Text(localizer.t("settings.noAppIdleTimeItems"))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 14)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(viewModel.appIdleTimeItems.indices, id: \.self) { index in
+                            let item = viewModel.appIdleTimeItems[index]
+                            appIdleTimeRow(item)
+                            if index < viewModel.appIdleTimeItems.count - 1 {
+                                Divider()
+                                    .padding(.leading, 52)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -741,6 +932,59 @@ private struct SettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 16)
+    }
+
+    private func appIdleTimeBinding(for bundleID: String) -> Binding<Double> {
+        Binding(
+            get: {
+                viewModel.idleTimeMinutes(for: bundleID)
+            },
+            set: { newValue in
+                viewModel.setIdleTimeMinutes(newValue, for: bundleID)
+            }
+        )
+    }
+
+    private func appIdleTimeRow(_ item: IdleTimeAppInfo) -> some View {
+        HStack(spacing: 14) {
+            Image(nsImage: item.icon)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 34, height: 34)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.displayName)
+                    .font(.body.weight(.semibold))
+                    .lineLimit(1)
+
+                Text(item.bundleID)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            Spacer()
+
+            TextField("", value: appIdleTimeBinding(for: item.bundleID), format: .number.precision(.fractionLength(0...1)))
+                .multilineTextAlignment(.trailing)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .frame(width: 82)
+
+            Text("min")
+                .frame(width: 30, alignment: .leading)
+                .foregroundStyle(.secondary)
+
+            Button {
+                viewModel.removeIdleTimeBundleID(item.bundleID)
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .help(localizer.t("settings.removeAppIdleTime", item.bundleID))
+        }
+        .padding(.vertical, 11)
     }
 
     private func whitelistRow(_ item: WhitelistAppInfo) -> some View {

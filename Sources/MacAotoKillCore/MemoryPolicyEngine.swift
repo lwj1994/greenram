@@ -4,19 +4,26 @@ import Foundation
 public struct MemoryPolicyConfiguration: Equatable {
     public var autoReleaseEnabled: Bool
     public var minimumBackgroundDuration: TimeInterval
+    public var minimumBackgroundDurationsByBundleID: [String: TimeInterval]
     public var maxAppsPerSweep: Int
     public var forceTerminateImmediately: Bool
 
     public init(
         autoReleaseEnabled: Bool = true,
         minimumBackgroundDuration: TimeInterval = MemoryPolicyDefaults.minimumBackgroundDuration,
+        minimumBackgroundDurationsByBundleID: [String: TimeInterval] = [:],
         maxAppsPerSweep: Int = 3,
         forceTerminateImmediately: Bool = true
     ) {
         self.autoReleaseEnabled = autoReleaseEnabled
         self.minimumBackgroundDuration = minimumBackgroundDuration
+        self.minimumBackgroundDurationsByBundleID = minimumBackgroundDurationsByBundleID
         self.maxAppsPerSweep = maxAppsPerSweep
         self.forceTerminateImmediately = forceTerminateImmediately
+    }
+
+    public func minimumBackgroundDuration(for bundleID: String) -> TimeInterval {
+        minimumBackgroundDurationsByBundleID[bundleID] ?? minimumBackgroundDuration
     }
 }
 
@@ -103,7 +110,7 @@ public final class MemoryPolicyEngine {
         guard app.pid != ProcessInfo.processInfo.processIdentifier else { return false }
         guard !app.isFrontmost else { return false }
         guard !app.isWhitelisted else { return false }
-        guard app.backgroundDuration(now: now) >= configuration.minimumBackgroundDuration else { return false }
+        guard app.backgroundDuration(now: now) >= configuration.minimumBackgroundDuration(for: app.bundleID) else { return false }
         return true
     }
 

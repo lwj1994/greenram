@@ -27,6 +27,33 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(store.swapLimitBytes, MemoryPolicyDefaults.minimumSwapLimitBytes)
     }
 
+    func testPerAppBackgroundDurationsPersistAndClampToMinimum() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(defaults: defaults)
+        store.setMinimumBackgroundDuration(30, for: "com.example.short")
+        store.setMinimumBackgroundDuration(45 * 60, for: "com.example.long")
+
+        XCTAssertEqual(store.minimumBackgroundDurationsByBundleID["com.example.short"], 60)
+        XCTAssertEqual(store.minimumBackgroundDuration(for: "com.example.long"), 45 * 60)
+        XCTAssertEqual(store.minimumBackgroundDuration(for: "com.example.default"), MemoryPolicyDefaults.minimumBackgroundDuration)
+    }
+
+    func testResetMemoryPolicyDefaultsRemovesPerAppBackgroundDurations() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(defaults: defaults)
+        store.setMinimumBackgroundDuration(45 * 60, for: "com.example.long")
+
+        store.resetMemoryPolicyDefaults()
+
+        XCTAssertTrue(store.minimumBackgroundDurationsByBundleID.isEmpty)
+    }
+
     func testThresholdConfigurationUsesSharedDefaults() {
         let configuration = MemoryThresholdConfiguration()
 

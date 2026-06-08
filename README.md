@@ -24,6 +24,11 @@ It is built for a simple case: keep the frontmost app responsive by removing app
 - Multi-process memory accounting for browsers, Electron apps, Xcode helpers, and similar app trees.
 - Localized UI for Simplified Chinese, Traditional Chinese, English, Japanese, German, and French.
 
+## Compatibility
+
+- macOS 13.0 Ventura or later.
+- Release packages are Universal 2 and support Apple Silicon (`arm64`) and Intel (`x86_64`) Macs.
+
 ## Current Cleanup Policy
 
 An app is considered cleanable only when all of these conditions are true:
@@ -53,6 +58,10 @@ GreenRAM never quits:
 ## Download
 
 Download the latest signed and notarized DMG from the [Releases](../../releases) page.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Build
 

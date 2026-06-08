@@ -7,6 +7,7 @@ public final class SettingsStore {
     private let swapLimitEnabledKey = "swapLimitEnabled"
     private let swapLimitBytesKey = "swapLimitBytes"
     private let minimumBackgroundDurationKey = "minimumBackgroundDuration"
+    private let minimumBackgroundDurationsByBundleIDKey = "minimumBackgroundDurationsByBundleID"
     private let maxAppsPerSweepKey = "maxAppsPerSweep"
     private let languageCodeKey = "languageCode"
 
@@ -57,6 +58,48 @@ public final class SettingsStore {
         set { defaults.set(max(60, newValue), forKey: minimumBackgroundDurationKey) }
     }
 
+    public var minimumBackgroundDurationsByBundleID: [String: TimeInterval] {
+        get {
+            guard let storedValues = defaults.dictionary(forKey: minimumBackgroundDurationsByBundleIDKey) else {
+                return [:]
+            }
+
+            return storedValues.reduce(into: [String: TimeInterval]()) { result, entry in
+                guard !entry.key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+                if let value = entry.value as? Double {
+                    result[entry.key] = max(60, value)
+                } else if let value = entry.value as? NSNumber {
+                    result[entry.key] = max(60, value.doubleValue)
+                }
+            }
+        }
+        set {
+            let normalizedValues = newValue.reduce(into: [String: Double]()) { result, entry in
+                let bundleID = entry.key.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !bundleID.isEmpty else { return }
+                result[bundleID] = max(60, entry.value)
+            }
+            defaults.set(normalizedValues, forKey: minimumBackgroundDurationsByBundleIDKey)
+        }
+    }
+
+    public func minimumBackgroundDuration(for bundleID: String) -> TimeInterval {
+        minimumBackgroundDurationsByBundleID[bundleID] ?? minimumBackgroundDuration
+    }
+
+    public func setMinimumBackgroundDuration(_ duration: TimeInterval?, for bundleID: String) {
+        let normalizedBundleID = bundleID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedBundleID.isEmpty else { return }
+
+        var values = minimumBackgroundDurationsByBundleID
+        if let duration {
+            values[normalizedBundleID] = max(60, duration)
+        } else {
+            values.removeValue(forKey: normalizedBundleID)
+        }
+        minimumBackgroundDurationsByBundleID = values
+    }
+
     public var maxAppsPerSweep: Int {
         get { int(forKey: maxAppsPerSweepKey, defaultValue: MemoryPolicyDefaults.maxAppsPerSweep) }
         set { defaults.set(max(1, min(newValue, 20)), forKey: maxAppsPerSweepKey) }
@@ -80,6 +123,7 @@ public final class SettingsStore {
         defaults.removeObject(forKey: swapLimitEnabledKey)
         defaults.removeObject(forKey: swapLimitBytesKey)
         defaults.removeObject(forKey: minimumBackgroundDurationKey)
+        defaults.removeObject(forKey: minimumBackgroundDurationsByBundleIDKey)
         defaults.removeObject(forKey: maxAppsPerSweepKey)
     }
 

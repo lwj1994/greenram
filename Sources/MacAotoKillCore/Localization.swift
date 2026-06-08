@@ -527,21 +527,53 @@ public struct Localizer: Equatable {
             .de: "Hintergrundzeit",
             .fr: "Temps en arrière-plan"
         ],
+        "settings.defaultBackgroundTime": [
+            .en: "Default background time",
+            .zhHans: "默认非前台时间",
+            .zhHant: "預設非前台時間",
+            .ja: "既定の背景時間",
+            .de: "Standard-Hintergrundzeit",
+            .fr: "Temps arrière-plan par défaut"
+        ],
+        "settings.appIdleTimes": [
+            .en: "App-Specific Background Time",
+            .zhHans: "单独 App 非前台时间",
+            .zhHant: "單獨 App 非前台時間",
+            .ja: "アプリ別の背景時間",
+            .de: "App-spezifische Hintergrundzeit",
+            .fr: "Temps en arrière-plan par app"
+        ],
+        "settings.noAppIdleTimeItems": [
+            .en: "No app-specific background times",
+            .zhHans: "没有单独 App 非前台时间",
+            .zhHant: "沒有單獨 App 非前台時間",
+            .ja: "アプリ別の背景時間はありません",
+            .de: "Keine app-spezifischen Hintergrundzeiten",
+            .fr: "Aucun temps en arrière-plan par app"
+        ],
+        "settings.removeAppIdleTime": [
+            .en: "Use default background time for %@",
+            .zhHans: "%@ 改用默认非前台时间",
+            .zhHant: "%@ 改用預設非前台時間",
+            .ja: "%@ に既定の背景時間を使う",
+            .de: "Standard-Hintergrundzeit für %@ verwenden",
+            .fr: "Utiliser le temps par défaut pour %@"
+        ],
         "settings.warningIdleTime": [
-            .en: "Warning idle time",
-            .zhHans: "警告闲置时长",
-            .zhHant: "警告閒置時間",
-            .ja: "警告時の待機時間",
-            .de: "Leerlaufzeit bei Warnung",
-            .fr: "Inactivité en alerte"
+            .en: "Warning background time",
+            .zhHans: "警告非前台时间",
+            .zhHant: "警告非前台時間",
+            .ja: "警告時の背景時間",
+            .de: "Hintergrundzeit bei Warnung",
+            .fr: "Temps en arrière-plan en alerte"
         ],
         "settings.criticalIdleTime": [
-            .en: "Critical idle time",
-            .zhHans: "严重闲置时长",
-            .zhHant: "嚴重閒置時間",
-            .ja: "危険時の待機時間",
-            .de: "Leerlaufzeit kritisch",
-            .fr: "Inactivité critique"
+            .en: "Critical background time",
+            .zhHans: "严重非前台时间",
+            .zhHant: "嚴重非前台時間",
+            .ja: "危険時の背景時間",
+            .de: "Hintergrundzeit kritisch",
+            .fr: "Temps en arrière-plan critique"
         ],
         "settings.maxAppsPerSweep": [
             .en: "Max apps per sweep",
@@ -568,12 +600,12 @@ public struct Localizer: Equatable {
             .fr: "Réinitialiser la politique mémoire ?"
         ],
         "settings.resetConfirmMessage": [
-            .en: "This restores RAM Max and Swap settings. Language will stay unchanged.",
-            .zhHans: "这会恢复 RAM 最大值和 Swap 设置。语言设置不会改变。",
-            .zhHant: "這會恢復 RAM 最大值和 Swap 設定。語言設定不會改變。",
-            .ja: "RAM上限とSwap設定を既定値に戻します。言語設定は変更されません。",
-            .de: "RAM-Maximum und Swap-Einstellungen werden zurückgesetzt. Die Sprache bleibt unverändert.",
-            .fr: "RAM max et réglages Swap seront réinitialisés. La langue restera inchangée."
+            .en: "This restores cleanup limits and removes app-specific background times. Language will stay unchanged.",
+            .zhHans: "这会恢复清理上限，并移除单独 App 非前台时间。语言设置不会改变。",
+            .zhHant: "這會恢復清理上限，並移除單獨 App 非前台時間。語言設定不會改變。",
+            .ja: "整理の上限を既定値に戻し、アプリ別の背景時間を削除します。言語設定は変更されません。",
+            .de: "Bereinigungslimits werden zurückgesetzt und app-spezifische Hintergrundzeiten entfernt. Die Sprache bleibt unverändert.",
+            .fr: "Les limites de nettoyage seront réinitialisées et les temps en arrière-plan par app supprimés. La langue restera inchangée."
         ],
         "settings.resetConfirmButton": [
             .en: "Reset",

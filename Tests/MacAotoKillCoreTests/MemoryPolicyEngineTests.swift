@@ -93,6 +93,40 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(terminator.forceQuitApps.map(\.displayName), ["Background App"])
     }
 
+    func testPerAppBackgroundThresholdOverridesGlobalThreshold() {
+        let now = Date()
+        let engine = MemoryPolicyEngine(
+            configuration: MemoryPolicyConfiguration(
+                minimumBackgroundDuration: 30 * 60,
+                minimumBackgroundDurationsByBundleID: [
+                    "test.short": 10 * 60,
+                    "test.long": 60 * 60
+                ]
+            ),
+            terminator: TerminatorSpy(),
+            logger: LoggerSpy()
+        )
+        let shortOverrideApp = makeApp(
+            bundleID: "test.short",
+            name: "Short Override",
+            lastBackgroundAt: now.addingTimeInterval(-11 * 60)
+        )
+        let globalApp = makeApp(
+            bundleID: "test.global",
+            name: "Global",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+        let longOverrideApp = makeApp(
+            bundleID: "test.long",
+            name: "Long Override",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        let candidates = engine.candidates(for: [shortOverrideApp, globalApp, longOverrideApp], now: now)
+
+        XCTAssertEqual(Set(candidates.map(\.bundleID)), ["test.short", "test.global"])
+    }
+
     func testDuplicateQuitCooldownUsesBundleID() {
         let now = Date()
         let terminator = TerminatorSpy()
