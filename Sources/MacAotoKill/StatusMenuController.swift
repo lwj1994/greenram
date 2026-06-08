@@ -94,6 +94,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             autoReleaseEnabled: true,
             minimumBackgroundDuration: settingsStore.minimumBackgroundDuration,
             minimumBackgroundDurationsByBundleID: settingsStore.minimumBackgroundDurationsByBundleID,
+            isMemoryLimitExceeded: thresholdEvaluation.isExceeded,
             maxAppsPerSweep: settingsStore.maxAppsPerSweep,
             forceTerminateImmediately: true
         )

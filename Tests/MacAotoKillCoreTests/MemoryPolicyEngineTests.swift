@@ -37,26 +37,45 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(Set(candidates.map(\.displayName)), ["Idle Shopper", "Browser"])
     }
 
-    func testCandidatesExcludeAppsNotInAutoQuitList() {
+    func testUnlistedAppsRequireMemoryLimitAndDefaultBackgroundThreshold() {
         let now = Date()
         let listedApp = makeApp(bundleID: "test.listed", name: "Listed", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
-        let unlistedApp = makeApp(bundleID: "test.unlisted", name: "Unlisted", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
-        let engine = makeEngine(autoQuitDurations: [
+        let idleUnlistedApp = makeApp(bundleID: "test.unlisted-idle", name: "Unlisted Idle", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+        let recentUnlistedApp = makeApp(bundleID: "test.unlisted-recent", name: "Unlisted Recent", lastBackgroundAt: now.addingTimeInterval(-29 * 60))
+        let belowLimitEngine = makeEngine(autoQuitDurations: [
             "test.listed": 30 * 60
         ])
+        let exceededLimitEngine = makeEngine(
+            autoQuitDurations: ["test.listed": 30 * 60],
+            isMemoryLimitExceeded: true
+        )
 
-        let candidates = engine.candidates(for: [listedApp, unlistedApp], now: now)
+        let apps = [listedApp, idleUnlistedApp, recentUnlistedApp]
 
-        XCTAssertEqual(candidates.map(\.bundleID), ["test.listed"])
+        XCTAssertEqual(belowLimitEngine.candidates(for: apps, now: now).map(\.bundleID), ["test.listed"])
+        XCTAssertEqual(Set(exceededLimitEngine.candidates(for: apps, now: now).map(\.bundleID)), ["test.listed", "test.unlisted-idle"])
+    }
+
+    func testAutoQuitAppsDoNotWaitForMemoryLimit() {
+        let now = Date()
+        let engine = makeEngine(autoQuitDurations: [
+            "test.auto-quit": 30 * 60
+        ])
+        let app = makeApp(bundleID: "test.auto-quit", name: "Auto Quit", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+
+        XCTAssertEqual(engine.candidates(for: [app], now: now).map(\.bundleID), ["test.auto-quit"])
     }
 
     func testPolicyNeverTargetsFrontmostWhitelistedOrRecentlyBackgroundedApps() {
         let now = Date()
-        let engine = makeEngine(autoQuitDurations: [
-            "test.front": 30 * 60,
-            "test.pinned": 30 * 60,
-            "test.recent": 30 * 60
-        ])
+        let engine = makeEngine(
+            autoQuitDurations: [
+                "test.front": 30 * 60,
+                "test.pinned": 30 * 60,
+                "test.recent": 30 * 60
+            ],
+            isMemoryLimitExceeded: true
+        )
         let apps = [
             makeApp(bundleID: "test.front", name: "Front", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isFrontmost: true),
             makeApp(bundleID: "test.pinned", name: "Pinned", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isWhitelisted: true),
@@ -219,9 +238,15 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
     }
 
-    private func makeEngine(autoQuitDurations: [String: TimeInterval] = [:]) -> MemoryPolicyEngine {
+    private func makeEngine(
+        autoQuitDurations: [String: TimeInterval] = [:],
+        isMemoryLimitExceeded: Bool = false
+    ) -> MemoryPolicyEngine {
         MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(minimumBackgroundDurationsByBundleID: autoQuitDurations),
+            configuration: MemoryPolicyConfiguration(
+                minimumBackgroundDurationsByBundleID: autoQuitDurations,
+                isMemoryLimitExceeded: isMemoryLimitExceeded
+            ),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
         )

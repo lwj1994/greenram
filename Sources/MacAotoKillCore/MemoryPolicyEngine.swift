@@ -5,6 +5,7 @@ public struct MemoryPolicyConfiguration: Equatable {
     public var autoReleaseEnabled: Bool
     public var minimumBackgroundDuration: TimeInterval
     public var minimumBackgroundDurationsByBundleID: [String: TimeInterval]
+    public var isMemoryLimitExceeded: Bool
     public var maxAppsPerSweep: Int
     public var forceTerminateImmediately: Bool
 
@@ -12,18 +13,24 @@ public struct MemoryPolicyConfiguration: Equatable {
         autoReleaseEnabled: Bool = true,
         minimumBackgroundDuration: TimeInterval = MemoryPolicyDefaults.minimumBackgroundDuration,
         minimumBackgroundDurationsByBundleID: [String: TimeInterval] = [:],
+        isMemoryLimitExceeded: Bool = false,
         maxAppsPerSweep: Int = 3,
         forceTerminateImmediately: Bool = true
     ) {
         self.autoReleaseEnabled = autoReleaseEnabled
         self.minimumBackgroundDuration = minimumBackgroundDuration
         self.minimumBackgroundDurationsByBundleID = minimumBackgroundDurationsByBundleID
+        self.isMemoryLimitExceeded = isMemoryLimitExceeded
         self.maxAppsPerSweep = maxAppsPerSweep
         self.forceTerminateImmediately = forceTerminateImmediately
     }
 
     public func autoQuitBackgroundDuration(for bundleID: String) -> TimeInterval? {
         minimumBackgroundDurationsByBundleID[bundleID]
+    }
+
+    public func isAutoQuitApp(_ bundleID: String) -> Bool {
+        autoQuitBackgroundDuration(for: bundleID) != nil
     }
 }
 
@@ -110,9 +117,13 @@ public final class MemoryPolicyEngine {
         guard app.pid != ProcessInfo.processInfo.processIdentifier else { return false }
         guard !app.isFrontmost else { return false }
         guard !app.isWhitelisted else { return false }
-        guard let backgroundDurationThreshold = configuration.autoQuitBackgroundDuration(for: app.bundleID) else { return false }
+
+        let isAutoQuitApp = configuration.isAutoQuitApp(app.bundleID)
+        let backgroundDurationThreshold = configuration.autoQuitBackgroundDuration(for: app.bundleID)
+            ?? configuration.minimumBackgroundDuration
+
         guard app.backgroundDuration(now: now) >= backgroundDurationThreshold else { return false }
-        return true
+        return isAutoQuitApp || configuration.isMemoryLimitExceeded
     }
 
     public func score(_ app: AppRuntimeState, now: Date = Date()) -> Double {

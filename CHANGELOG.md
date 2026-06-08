@@ -4,6 +4,12 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.1.8 - 2026-06-08
+
+- Updated cleanup policy: Auto-Quit Apps only wait for their non-frontmost time; ordinary non-whitelisted apps also require RAM or Swap limits to be exceeded; whitelisted apps are never quit.
+- Updated Settings and README wording to match the new cleanup policy.
+- Removed the obsolete MVP notes document.
+
 ## v0.1.7 - 2026-06-08
 
 - Set the minimum configurable background time to 3 minutes.

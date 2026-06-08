@@ -528,12 +528,12 @@ public struct Localizer: Equatable {
             .fr: "Temps en arrière-plan"
         ],
         "settings.defaultBackgroundTime": [
-            .en: "Default auto-quit time",
-            .zhHans: "默认自动退出时间",
-            .zhHant: "預設自動退出時間",
-            .ja: "既定の自動終了時間",
-            .de: "Standardzeit bis Auto-Beenden",
-            .fr: "Delai auto par defaut"
+            .en: "Default background time",
+            .zhHans: "默认非前台时间",
+            .zhHant: "預設非前台時間",
+            .ja: "既定の背景時間",
+            .de: "Standard-Hintergrundzeit",
+            .fr: "Temps arriere-plan par defaut"
         ],
         "settings.appIdleTimes": [
             .en: "Auto-Quit Apps",
@@ -544,12 +544,12 @@ public struct Localizer: Equatable {
             .fr: "Apps en auto-fermeture"
         ],
         "settings.appIdleTimesHint": [
-            .en: "Auto-quit: apps exit automatically once their non-frontmost time limit is met.",
-            .zhHans: "自动退出：只要满足非前台时间限制，就会自动退出。",
-            .zhHant: "自動退出：只要滿足非前台時間限制，就會自動退出。",
-            .ja: "自動終了：前面にない時間の制限を満たすと、自動的に終了します。",
-            .de: "Auto-Beenden: Apps werden automatisch beendet, sobald ihre Zeit im Hintergrund erreicht ist.",
-            .fr: "Auto-fermeture: les apps se ferment automatiquement une fois la limite hors premier plan atteinte."
+            .en: "Auto-quit apps exit once their non-frontmost time limit is met. Other apps also need RAM or Swap limits exceeded.",
+            .zhHans: "自动退出 App 只看非前台时间。其他 App 还需要 RAM 或 Swap 状态超限。",
+            .zhHant: "自動退出 App 只看非前台時間。其他 App 還需要 RAM 或 Swap 狀態超限。",
+            .ja: "自動終了アプリは背景時間だけで終了します。他のアプリには RAM または Swap の上限超過も必要です。",
+            .de: "Auto-Beenden-Apps brauchen nur die Hintergrundzeit. Andere Apps brauchen zusaetzlich RAM- oder Swap-Limits.",
+            .fr: "Les apps en auto-fermeture suivent seulement le temps hors premier plan. Les autres exigent aussi une limite RAM ou Swap depassee."
         ],
         "settings.noAppIdleTimeItems": [
             .en: "No auto-quit app rules",

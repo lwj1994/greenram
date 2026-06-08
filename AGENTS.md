@@ -10,25 +10,28 @@
 
 ## Current Cleanup Strategy
 
-GreenRAM 当前只用两个条件判断某个 App 是否可清理：
+GreenRAM 当前按三层规则判断某个 App 是否可清理：
 
-- App 不是当前 macOS 前台 App。
-- App 不在白名单。
+- 白名单 App 永不清理。
+- Auto-Quit Apps 只验证非前台时间。
+- 普通 App 必须同时满足内存状态超限和非前台时间达标。
 
 白名单初始包括：
 
 - 用户手动加入的 Bundle ID。
 - 默认系统项：Finder、Dock、WindowServer、System Settings、System Preferences。
 
-默认系统项只是初始白名单项，不是绑死保护项。用户可以在 Settings 里移除、重新加入或编辑所有白名单项。
+默认系统项只是初始白名单项，不是绑死保护项。用户可以在 Settings 里移除、重新加入或编辑所有白名单项。只要仍在白名单中，就永久不清理。
 
 非前台时间规则：
 
 - App 离开前台后开始计时。
 - 如果没有记录到离开前台时间，使用最近前台时间或 App 启动时间估算。
-- 默认阈值是 30 分钟。
+- 普通 App 使用默认阈值，默认是 30 分钟。
+- Auto-Quit Apps 使用各自配置的阈值。
 - 阈值可在 Settings 里修改。
-- 非前台时间达到阈值，且 App 不在白名单时，即符合清理条件。
+- Auto-Quit Apps 非前台时间达到阈值，且不在白名单时，即符合清理条件。
+- 普通 App 非前台时间达到默认阈值、内存状态超限，且不在白名单时，才符合清理条件。
 
 执行规则：
 
@@ -44,4 +47,5 @@ GreenRAM 当前只用两个条件判断某个 App 是否可清理：
 - Bundle ID 关键词。
 - App 名称关键词。
 - 不再用 App 内存大小判断是否可清理。
-- RAM / Swap 只用于状态展示和阈值显示，不决定某个 App 是否可清理。
+- 单个 App 的内存大小不决定它是否可清理。
+- RAM / Swap 状态超限只作为普通 App 的清理 gate；Auto-Quit Apps 不等待 RAM / Swap 超限。
