@@ -22,8 +22,8 @@ public struct MemoryPolicyConfiguration: Equatable {
         self.forceTerminateImmediately = forceTerminateImmediately
     }
 
-    public func minimumBackgroundDuration(for bundleID: String) -> TimeInterval {
-        minimumBackgroundDurationsByBundleID[bundleID] ?? minimumBackgroundDuration
+    public func autoQuitBackgroundDuration(for bundleID: String) -> TimeInterval? {
+        minimumBackgroundDurationsByBundleID[bundleID]
     }
 }
 
@@ -110,7 +110,8 @@ public final class MemoryPolicyEngine {
         guard app.pid != ProcessInfo.processInfo.processIdentifier else { return false }
         guard !app.isFrontmost else { return false }
         guard !app.isWhitelisted else { return false }
-        guard app.backgroundDuration(now: now) >= configuration.minimumBackgroundDuration(for: app.bundleID) else { return false }
+        guard let backgroundDurationThreshold = configuration.autoQuitBackgroundDuration(for: app.bundleID) else { return false }
+        guard app.backgroundDuration(now: now) >= backgroundDurationThreshold else { return false }
         return true
     }
 

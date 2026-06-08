@@ -198,9 +198,15 @@ private final class SettingsViewModel: ObservableObject {
         let bundleID = normalizedNewIdleTimeBundleID
         guard canAddIdleTimeBundleID else { return }
 
+        let wasWhitelisted = whitelistStore.contains(bundleID)
+        whitelistStore.remove(bundleID)
         settingsStore.setMinimumBackgroundDuration(minimumBackgroundMinutes * 60, for: bundleID)
         newIdleTimeBundleID = ""
+        reloadWhitelist()
         reloadIdleTimeItems()
+        if wasWhitelisted {
+            onWhitelistRemoved(bundleID)
+        }
         onChange()
     }
 
@@ -230,7 +236,8 @@ private final class SettingsViewModel: ObservableObject {
     }
 
     func setIdleTimeMinutes(_ minutes: Double, for bundleID: String) {
-        let clampedMinutes = min(max(minutes, 1), 240)
+        let minimumMinutes = MemoryPolicyDefaults.minimumConfigurableBackgroundDuration / 60
+        let clampedMinutes = min(max(minutes, minimumMinutes), 240)
         settingsStore.setMinimumBackgroundDuration(clampedMinutes * 60, for: bundleID)
         reloadIdleTimeItems()
         onChange()
@@ -246,8 +253,10 @@ private final class SettingsViewModel: ObservableObject {
         let bundleID = normalizedNewWhitelistBundleID
         guard canAddWhitelistBundleID else { return }
 
+        settingsStore.setMinimumBackgroundDuration(nil, for: bundleID)
         whitelistStore.add(bundleID)
         newWhitelistBundleID = ""
+        reloadIdleTimeItems()
         reloadWhitelist()
         onWhitelistAdded(bundleID)
     }
@@ -316,11 +325,17 @@ private final class SettingsViewModel: ObservableObject {
 
             let oldDuration = settingsStore.minimumBackgroundDurationsByBundleID[bundleID]
             let newDuration = minimumBackgroundMinutes * 60
+            let wasWhitelisted = whitelistStore.contains(bundleID)
+            whitelistStore.remove(bundleID)
             settingsStore.setMinimumBackgroundDuration(newDuration, for: bundleID)
             whitelistStore.setAppPath(appURL.path, for: bundleID)
             didChange = didChange || oldDuration != newDuration
+            if wasWhitelisted {
+                onWhitelistRemoved(bundleID)
+            }
         }
 
+        reloadWhitelist()
         reloadIdleTimeItems()
         if didChange {
             onChange()
@@ -328,6 +343,7 @@ private final class SettingsViewModel: ObservableObject {
     }
 
     private func addWhitelistApplications(_ urls: [URL]) {
+        var didRemoveAutoQuitRule = false
         for url in urls {
             guard
                 let appURL = Self.existingApplicationURL(from: url),
@@ -338,13 +354,21 @@ private final class SettingsViewModel: ObservableObject {
             }
 
             let wasAlreadyWhitelisted = whitelistStore.contains(bundleID)
+            if settingsStore.minimumBackgroundDurationsByBundleID[bundleID] != nil {
+                settingsStore.setMinimumBackgroundDuration(nil, for: bundleID)
+                didRemoveAutoQuitRule = true
+            }
             whitelistStore.add(bundleID)
             whitelistStore.setAppPath(appURL.path, for: bundleID)
             if !wasAlreadyWhitelisted {
                 onWhitelistAdded(bundleID)
             }
         }
+        reloadIdleTimeItems()
         reloadWhitelist()
+        if didRemoveAutoQuitRule {
+            onChange()
+        }
     }
 
     private static func makeIdleTimeItems(from bundleIDs: [String], store: WhitelistStore) -> [IdleTimeAppInfo] {
@@ -611,14 +635,6 @@ private struct SettingsView: View {
                         .padding(.leading, 176)
                         .padding(.bottom, 12)
                 }
-                rowDivider
-                valueRow(
-                    title: localizer.t("settings.defaultBackgroundTime"),
-                    value: $viewModel.minimumBackgroundMinutes,
-                    range: 1...240,
-                    suffix: "min",
-                    isExceeded: false
-                )
             }
         }
     }
@@ -626,6 +642,25 @@ private struct SettingsView: View {
     private var appIdleTimeSection: some View {
         settingsPanel(title: localizer.t("settings.appIdleTimes"), systemImage: "timer", color: Color(nsColor: .systemOrange)) {
             VStack(spacing: 0) {
+                Text(localizer.t("settings.appIdleTimesHint"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+
+                Divider()
+
+                valueRow(
+                    title: localizer.t("settings.defaultBackgroundTime"),
+                    value: $viewModel.minimumBackgroundMinutes,
+                    range: (MemoryPolicyDefaults.minimumConfigurableBackgroundDuration / 60)...240,
+                    suffix: "min",
+                    isExceeded: false
+                )
+
+                rowDivider
+
                 HStack(spacing: 12) {
                     Button {
                         viewModel.chooseIdleTimeApplications()

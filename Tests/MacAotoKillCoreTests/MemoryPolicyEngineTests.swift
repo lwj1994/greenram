@@ -25,22 +25,42 @@ final class MemoryPolicyEngineTests: XCTestCase {
 
     func testCandidatesIncludeAppsPastBackgroundThreshold() {
         let now = Date()
-        let idleLongEnough = makeApp(name: "Idle Shopper", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
-        let alsoIdleLongEnough = makeApp(name: "Browser", lastBackgroundAt: now.addingTimeInterval(-45 * 60))
-        let engine = makeEngine()
+        let idleLongEnough = makeApp(bundleID: "test.idle-shopper", name: "Idle Shopper", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+        let alsoIdleLongEnough = makeApp(bundleID: "test.browser", name: "Browser", lastBackgroundAt: now.addingTimeInterval(-45 * 60))
+        let engine = makeEngine(autoQuitDurations: [
+            "test.idle-shopper": 30 * 60,
+            "test.browser": 30 * 60
+        ])
 
         let candidates = engine.candidates(for: [idleLongEnough, alsoIdleLongEnough], now: now)
 
         XCTAssertEqual(Set(candidates.map(\.displayName)), ["Idle Shopper", "Browser"])
     }
 
+    func testCandidatesExcludeAppsNotInAutoQuitList() {
+        let now = Date()
+        let listedApp = makeApp(bundleID: "test.listed", name: "Listed", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+        let unlistedApp = makeApp(bundleID: "test.unlisted", name: "Unlisted", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+        let engine = makeEngine(autoQuitDurations: [
+            "test.listed": 30 * 60
+        ])
+
+        let candidates = engine.candidates(for: [listedApp, unlistedApp], now: now)
+
+        XCTAssertEqual(candidates.map(\.bundleID), ["test.listed"])
+    }
+
     func testPolicyNeverTargetsFrontmostWhitelistedOrRecentlyBackgroundedApps() {
         let now = Date()
-        let engine = makeEngine()
+        let engine = makeEngine(autoQuitDurations: [
+            "test.front": 30 * 60,
+            "test.pinned": 30 * 60,
+            "test.recent": 30 * 60
+        ])
         let apps = [
-            makeApp(name: "Front", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isFrontmost: true),
-            makeApp(name: "Pinned", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isWhitelisted: true),
-            makeApp(name: "Recent", lastBackgroundAt: now.addingTimeInterval(-29 * 60))
+            makeApp(bundleID: "test.front", name: "Front", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isFrontmost: true),
+            makeApp(bundleID: "test.pinned", name: "Pinned", lastBackgroundAt: now.addingTimeInterval(-31 * 60), isWhitelisted: true),
+            makeApp(bundleID: "test.recent", name: "Recent", lastBackgroundAt: now.addingTimeInterval(-29 * 60))
         ]
 
         let candidates = engine.candidates(for: apps, now: now)
@@ -52,14 +72,19 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let now = Date()
         let terminator = TerminatorSpy()
         let logger = LoggerSpy()
+        let bundleIDs = (0..<4).map { "test.app-\($0)" }
         let engine = MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(maxAppsPerSweep: 2),
+            configuration: MemoryPolicyConfiguration(
+                minimumBackgroundDurationsByBundleID: Dictionary(uniqueKeysWithValues: bundleIDs.map { ($0, 30 * 60) }),
+                maxAppsPerSweep: 2
+            ),
             terminator: terminator,
             logger: logger
         )
         let apps = (0..<4).map {
             makeApp(
                 pid: pid_t(1_000 + $0),
+                bundleID: "test.app-\($0)",
                 name: "App \($0)",
                 lastBackgroundAt: now.addingTimeInterval(-31 * 60),
                 memoryBytes: UInt64(300 + $0) * 1024 * 1024
@@ -77,12 +102,16 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let terminator = TerminatorSpy()
         let logger = LoggerSpy()
         let engine = MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(autoReleaseEnabled: false),
+            configuration: MemoryPolicyConfiguration(
+                autoReleaseEnabled: false,
+                minimumBackgroundDurationsByBundleID: ["test.background": 30 * 60]
+            ),
             terminator: terminator,
             logger: logger
         )
         let app = makeApp(
             pid: 1_000,
+            bundleID: "test.background",
             name: "Background App",
             lastBackgroundAt: now.addingTimeInterval(-31 * 60),
             memoryBytes: 512 * 1024 * 1024
@@ -93,7 +122,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(terminator.forceQuitApps.map(\.displayName), ["Background App"])
     }
 
-    func testPerAppBackgroundThresholdOverridesGlobalThreshold() {
+    func testAutoQuitListUsesPerAppBackgroundThresholds() {
         let now = Date()
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
@@ -124,7 +153,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
 
         let candidates = engine.candidates(for: [shortOverrideApp, globalApp, longOverrideApp], now: now)
 
-        XCTAssertEqual(Set(candidates.map(\.bundleID)), ["test.short", "test.global"])
+        XCTAssertEqual(candidates.map(\.bundleID), ["test.short"])
     }
 
     func testDuplicateQuitCooldownUsesBundleID() {
@@ -132,7 +161,9 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let terminator = TerminatorSpy()
         let logger = LoggerSpy()
         let engine = MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(),
+            configuration: MemoryPolicyConfiguration(
+                minimumBackgroundDurationsByBundleID: ["test.same-app": 30 * 60]
+            ),
             terminator: terminator,
             logger: logger
         )
@@ -160,7 +191,12 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let terminator = TerminatorSpy()
         let logger = LoggerSpy()
         let engine = MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(),
+            configuration: MemoryPolicyConfiguration(
+                minimumBackgroundDurationsByBundleID: [
+                    "test.original": 30 * 60,
+                    "test.reused-pid": 30 * 60
+                ]
+            ),
             terminator: terminator,
             logger: logger
         )
@@ -183,9 +219,9 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
     }
 
-    private func makeEngine() -> MemoryPolicyEngine {
+    private func makeEngine(autoQuitDurations: [String: TimeInterval] = [:]) -> MemoryPolicyEngine {
         MemoryPolicyEngine(
-            configuration: MemoryPolicyConfiguration(),
+            configuration: MemoryPolicyConfiguration(minimumBackgroundDurationsByBundleID: autoQuitDurations),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
         )

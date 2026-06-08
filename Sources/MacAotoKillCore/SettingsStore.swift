@@ -55,7 +55,7 @@ public final class SettingsStore {
 
     public var minimumBackgroundDuration: TimeInterval {
         get { double(forKey: minimumBackgroundDurationKey, defaultValue: MemoryPolicyDefaults.minimumBackgroundDuration) }
-        set { defaults.set(max(60, newValue), forKey: minimumBackgroundDurationKey) }
+        set { defaults.set(clampedBackgroundDuration(newValue), forKey: minimumBackgroundDurationKey) }
     }
 
     public var minimumBackgroundDurationsByBundleID: [String: TimeInterval] {
@@ -67,9 +67,9 @@ public final class SettingsStore {
             return storedValues.reduce(into: [String: TimeInterval]()) { result, entry in
                 guard !entry.key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 if let value = entry.value as? Double {
-                    result[entry.key] = max(60, value)
+                    result[entry.key] = clampedBackgroundDuration(value)
                 } else if let value = entry.value as? NSNumber {
-                    result[entry.key] = max(60, value.doubleValue)
+                    result[entry.key] = clampedBackgroundDuration(value.doubleValue)
                 }
             }
         }
@@ -77,14 +77,14 @@ public final class SettingsStore {
             let normalizedValues = newValue.reduce(into: [String: Double]()) { result, entry in
                 let bundleID = entry.key.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !bundleID.isEmpty else { return }
-                result[bundleID] = max(60, entry.value)
+                result[bundleID] = clampedBackgroundDuration(entry.value)
             }
             defaults.set(normalizedValues, forKey: minimumBackgroundDurationsByBundleIDKey)
         }
     }
 
-    public func minimumBackgroundDuration(for bundleID: String) -> TimeInterval {
-        minimumBackgroundDurationsByBundleID[bundleID] ?? minimumBackgroundDuration
+    public func autoQuitBackgroundDuration(for bundleID: String) -> TimeInterval? {
+        minimumBackgroundDurationsByBundleID[bundleID]
     }
 
     public func setMinimumBackgroundDuration(_ duration: TimeInterval?, for bundleID: String) {
@@ -93,7 +93,7 @@ public final class SettingsStore {
 
         var values = minimumBackgroundDurationsByBundleID
         if let duration {
-            values[normalizedBundleID] = max(60, duration)
+            values[normalizedBundleID] = clampedBackgroundDuration(duration)
         } else {
             values.removeValue(forKey: normalizedBundleID)
         }
@@ -150,5 +150,9 @@ public final class SettingsStore {
 
     private func clamp(_ value: Double, min minimum: Double, max maximum: Double) -> Double {
         Swift.max(minimum, Swift.min(value, maximum))
+    }
+
+    private func clampedBackgroundDuration(_ value: TimeInterval) -> TimeInterval {
+        max(MemoryPolicyDefaults.minimumConfigurableBackgroundDuration, value)
     }
 }

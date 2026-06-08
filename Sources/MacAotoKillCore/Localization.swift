@@ -440,12 +440,12 @@ public struct Localizer: Equatable {
             .fr: "Swap utilisé"
         ],
         "settings.releaseThresholds": [
-            .en: "Cleanup Limits",
-            .zhHans: "清理上限",
-            .zhHant: "清理上限",
-            .ja: "整理の上限",
-            .de: "Bereinigungslimits",
-            .fr: "Limites de nettoyage"
+            .en: "Status Limits",
+            .zhHans: "状态显示上限",
+            .zhHant: "狀態顯示上限",
+            .ja: "状態表示の上限",
+            .de: "Status-Grenzwerte",
+            .fr: "Limites d'etat"
         ],
         "settings.autoReleaseCheckbox": [
             .en: "Auto clean idle background apps",
@@ -528,36 +528,44 @@ public struct Localizer: Equatable {
             .fr: "Temps en arrière-plan"
         ],
         "settings.defaultBackgroundTime": [
-            .en: "Default background time",
-            .zhHans: "默认非前台时间",
-            .zhHant: "預設非前台時間",
-            .ja: "既定の背景時間",
-            .de: "Standard-Hintergrundzeit",
-            .fr: "Temps arrière-plan par défaut"
+            .en: "Default auto-quit time",
+            .zhHans: "默认自动退出时间",
+            .zhHant: "預設自動退出時間",
+            .ja: "既定の自動終了時間",
+            .de: "Standardzeit bis Auto-Beenden",
+            .fr: "Delai auto par defaut"
         ],
         "settings.appIdleTimes": [
-            .en: "App-Specific Background Time",
-            .zhHans: "单独 App 非前台时间",
-            .zhHant: "單獨 App 非前台時間",
-            .ja: "アプリ別の背景時間",
-            .de: "App-spezifische Hintergrundzeit",
-            .fr: "Temps en arrière-plan par app"
+            .en: "Auto-Quit Apps",
+            .zhHans: "自动退出 App",
+            .zhHant: "自動退出 App",
+            .ja: "自動終了するアプリ",
+            .de: "Apps automatisch beenden",
+            .fr: "Apps en auto-fermeture"
+        ],
+        "settings.appIdleTimesHint": [
+            .en: "Auto-quit: apps exit automatically once their non-frontmost time limit is met.",
+            .zhHans: "自动退出：只要满足非前台时间限制，就会自动退出。",
+            .zhHant: "自動退出：只要滿足非前台時間限制，就會自動退出。",
+            .ja: "自動終了：前面にない時間の制限を満たすと、自動的に終了します。",
+            .de: "Auto-Beenden: Apps werden automatisch beendet, sobald ihre Zeit im Hintergrund erreicht ist.",
+            .fr: "Auto-fermeture: les apps se ferment automatiquement une fois la limite hors premier plan atteinte."
         ],
         "settings.noAppIdleTimeItems": [
-            .en: "No app-specific background times",
-            .zhHans: "没有单独 App 非前台时间",
-            .zhHant: "沒有單獨 App 非前台時間",
-            .ja: "アプリ別の背景時間はありません",
-            .de: "Keine app-spezifischen Hintergrundzeiten",
-            .fr: "Aucun temps en arrière-plan par app"
+            .en: "No auto-quit app rules",
+            .zhHans: "没有自动退出 App 规则",
+            .zhHant: "沒有自動退出 App 規則",
+            .ja: "自動終了ルールはありません",
+            .de: "Keine Regeln zum automatischen Beenden",
+            .fr: "Aucune regle d'auto-fermeture"
         ],
         "settings.removeAppIdleTime": [
-            .en: "Use default background time for %@",
-            .zhHans: "%@ 改用默认非前台时间",
-            .zhHant: "%@ 改用預設非前台時間",
-            .ja: "%@ に既定の背景時間を使う",
-            .de: "Standard-Hintergrundzeit für %@ verwenden",
-            .fr: "Utiliser le temps par défaut pour %@"
+            .en: "Remove auto-quit rule for %@",
+            .zhHans: "移除 %@ 的自动退出规则",
+            .zhHant: "移除 %@ 的自動退出規則",
+            .ja: "%@ の自動終了ルールを削除",
+            .de: "Regel zum automatischen Beenden fuer %@ entfernen",
+            .fr: "Supprimer la regle d'auto-fermeture pour %@"
         ],
         "settings.warningIdleTime": [
             .en: "Warning background time",
@@ -592,20 +600,20 @@ public struct Localizer: Equatable {
             .fr: "Valeurs par défaut"
         ],
         "settings.resetConfirmTitle": [
-            .en: "Reset memory policy settings?",
-            .zhHans: "恢复内存策略默认值？",
-            .zhHant: "恢復記憶體策略預設值？",
-            .ja: "メモリポリシー設定を既定値に戻しますか？",
-            .de: "Speicherrichtlinie zurücksetzen?",
-            .fr: "Réinitialiser la politique mémoire ?"
+            .en: "Reset cleanup settings?",
+            .zhHans: "恢复清理设置默认值？",
+            .zhHant: "恢復清理設定預設值？",
+            .ja: "整理設定を既定値に戻しますか？",
+            .de: "Bereinigungseinstellungen zuruecksetzen?",
+            .fr: "Reinitialiser les reglages de nettoyage ?"
         ],
         "settings.resetConfirmMessage": [
-            .en: "This restores cleanup limits and removes app-specific background times. Language will stay unchanged.",
-            .zhHans: "这会恢复清理上限，并移除单独 App 非前台时间。语言设置不会改变。",
-            .zhHant: "這會恢復清理上限，並移除單獨 App 非前台時間。語言設定不會改變。",
-            .ja: "整理の上限を既定値に戻し、アプリ別の背景時間を削除します。言語設定は変更されません。",
-            .de: "Bereinigungslimits werden zurückgesetzt und app-spezifische Hintergrundzeiten entfernt. Die Sprache bleibt unverändert.",
-            .fr: "Les limites de nettoyage seront réinitialisées et les temps en arrière-plan par app supprimés. La langue restera inchangée."
+            .en: "This restores status limits and removes auto-quit app rules. Language will stay unchanged.",
+            .zhHans: "这会恢复状态显示上限，并移除自动退出 App 规则。语言设置不会改变。",
+            .zhHant: "這會恢復狀態顯示上限，並移除自動退出 App 規則。語言設定不會改變。",
+            .ja: "状態表示の上限を既定値に戻し、自動終了ルールを削除します。言語設定は変更されません。",
+            .de: "Status-Grenzwerte werden zurueckgesetzt und Regeln zum automatischen Beenden entfernt. Die Sprache bleibt unveraendert.",
+            .fr: "Les limites d'etat seront reinitialisees et les regles d'auto-fermeture supprimees. La langue restera inchangee."
         ],
         "settings.resetConfirmButton": [
             .en: "Reset",

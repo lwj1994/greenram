@@ -1,8 +1,17 @@
 # Changelog
 
+[Chinese version](CHANGELOG.zh-CN.md)
+
 All notable GreenRAM release changes are recorded here.
 
-## Unreleased
+## v0.1.7 - 2026-06-08
+
+- Set the minimum configurable background time to 3 minutes.
+- Changed timeout cleanup to use an explicit Auto-Quit Apps list.
+- Made the Auto-Quit Apps list and whitelist mutually exclusive.
+- Renamed memory threshold UI language to status-limit language.
+- Clarified that automatic cleanup does not wait for RAM or Swap limits to be exceeded.
+- Clarified Auto-Quit Apps wording in Settings and README: listed apps exit once their non-frontmost time limit is met.
 
 ## v0.1.6 - 2026-06-08
 
