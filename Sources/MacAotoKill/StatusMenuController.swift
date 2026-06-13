@@ -1,5 +1,6 @@
 import AppKit
 import MacAotoKillCore
+import SwiftUI
 import UniformTypeIdentifiers
 
 final class StatusMenuController: NSObject, NSMenuDelegate {
@@ -174,7 +175,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
         addCurrentAppWhitelistItem()
         addCandidateSubmenu()
-        addBackgroundAppsSubmenu()
+        addAllAppsSubmenu()
         addWhitelistSubmenu()
         addLogSubmenu()
 
@@ -192,13 +193,37 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     }
 
     private func addDashboardItem() {
-        let item = NSMenuItem()
-        item.view = MemoryDashboardMenuView(
-            memorySnapshot: memorySnapshot,
-            thresholdConfiguration: makeThresholdConfiguration(),
+        let thresholdConfiguration = makeThresholdConfiguration()
+        let content = MemoryDashboardMenuContent(
+            title: "GreenRAM",
+            statusText: thresholdEvaluation.isExceeded
+                ? localizer.t("status.exceeded")
+                : localizer.t("status.withinLimits"),
             isExceeded: thresholdEvaluation.isExceeded,
-            localizer: localizer
+            icon: StatusIconFactory.makeImage(isExceeded: thresholdEvaluation.isExceeded),
+            ramMetric: MemoryMetricDisplays.ram(
+                snapshot: memorySnapshot,
+                ramLimitPercent: thresholdConfiguration.ramLimitPercent,
+                localizer: localizer
+            ),
+            swapMetric: MemoryMetricDisplays.swap(
+                snapshot: memorySnapshot,
+                swapLimitEnabled: thresholdConfiguration.swapLimitEnabled,
+                swapLimitBytes: thresholdConfiguration.swapLimitBytes,
+                localizer: localizer
+            )
         )
+        let hostingView = NSHostingView(rootView: content)
+        let fittingHeight = max(1, ceil(hostingView.fittingSize.height))
+        hostingView.frame = NSRect(
+            x: 0,
+            y: 0,
+            width: MemoryDashboardMenuContent.width,
+            height: fittingHeight
+        )
+
+        let item = NSMenuItem()
+        item.view = hostingView
         menu.addItem(item)
     }
 
@@ -270,11 +295,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.addItem(parent)
     }
 
-    private func addBackgroundAppsSubmenu() {
+    private func addAllAppsSubmenu() {
         let apps = snapshot
-            .filter { !$0.isFrontmost }
             .sorted { $0.memoryBytes > $1.memoryBytes }
-            .prefix(12)
 
         let submenu = NSMenu()
         submenu.autoenablesItems = false
@@ -477,6 +500,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if isUserInitiated {
             let alert = NSAlert()
             alert.alertStyle = .warning
+            alert.icon = nil
             alert.messageText = localizer.t("update.checkFailedTitle")
             alert.informativeText = localizer.t("update.checkFailedMessage", error.localizedDescription)
             alert.addButton(withTitle: localizer.t("update.ok"))
@@ -488,6 +512,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private func presentUpdateAvailableAlert(_ info: AppUpdateInfo) {
         let alert = NSAlert()
         alert.alertStyle = .informational
+        alert.icon = nil
         alert.messageText = localizer.t("update.availableTitle", info.latestVersion)
         alert.informativeText = localizer.t("update.availableMessage", info.currentVersion)
         alert.addButton(withTitle: localizer.t("update.download"))
@@ -506,6 +531,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private func presentUpToDateAlert(currentVersion: String) {
         let alert = NSAlert()
         alert.alertStyle = .informational
+        alert.icon = nil
         alert.messageText = localizer.t("update.upToDateTitle")
         alert.informativeText = localizer.t("update.upToDateMessage", currentVersion)
         alert.addButton(withTitle: localizer.t("update.ok"))
@@ -513,6 +539,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         alert.runModal()
     }
 
+    @MainActor
     @objc private func openSettings(_ sender: NSMenuItem) {
         if settingsWindowController == nil {
             settingsWindowController = SettingsWindowController(
@@ -563,6 +590,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             alert.messageText = localizer.t("settings.exportLogsFailed")
             alert.informativeText = error.localizedDescription
             alert.alertStyle = .warning
+            alert.icon = nil
             alert.runModal()
         }
     }
@@ -590,395 +618,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
     @objc private func quitApp(_ sender: NSMenuItem) {
         NSApp.terminate(nil)
-    }
-}
-
-private final class MemoryDashboardMenuView: NSView {
-    private let localizer: Localizer
-
-    private enum Layout {
-        static let width: CGFloat = 392
-        static let contentWidth: CGFloat = 360
-        static let sideInset: CGFloat = 16
-    }
-
-    init(
-        memorySnapshot: SystemMemorySnapshot,
-        thresholdConfiguration: MemoryThresholdConfiguration,
-        isExceeded: Bool,
-        localizer: Localizer
-    ) {
-        self.localizer = localizer
-        super.init(frame: NSRect(x: 0, y: 0, width: Layout.width, height: 236))
-        setup(
-            memorySnapshot: memorySnapshot,
-            thresholdConfiguration: thresholdConfiguration,
-            isExceeded: isExceeded
-        )
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    private func setup(
-        memorySnapshot: SystemMemorySnapshot,
-        thresholdConfiguration: MemoryThresholdConfiguration,
-        isExceeded: Bool
-    ) {
-        let effectView = NSVisualEffectView()
-        effectView.material = .menu
-        effectView.blendingMode = .withinWindow
-        effectView.state = .active
-        effectView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(effectView)
-
-        let root = NSStackView()
-        root.orientation = .vertical
-        root.alignment = .leading
-        root.spacing = 12
-        root.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(root)
-
-        NSLayoutConstraint.activate([
-            effectView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            effectView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            effectView.topAnchor.constraint(equalTo: topAnchor),
-            effectView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Layout.sideInset),
-            root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Layout.sideInset),
-            root.topAnchor.constraint(equalTo: topAnchor, constant: 16),
-            root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
-        ])
-
-        root.addArrangedSubview(
-            makeHeader(isExceeded: isExceeded)
-        )
-        root.addArrangedSubview(
-            makePrimaryRAMBlock(
-                memorySnapshot: memorySnapshot,
-                thresholdConfiguration: thresholdConfiguration,
-                isExceeded: isExceeded
-            )
-        )
-
-        let swapDenominator = thresholdConfiguration.swapLimitEnabled
-            ? thresholdConfiguration.swapLimitBytes
-            : memorySnapshot.swapTotalBytes
-        let swapProgress = progress(Double(memorySnapshot.swapUsedBytes), total: Double(max(swapDenominator, 1)))
-        let compressedProgress = progress(Double(memorySnapshot.compressedBytes), total: Double(memorySnapshot.totalPhysicalBytes))
-
-        let secondaryRow = NSStackView()
-        secondaryRow.orientation = .horizontal
-        secondaryRow.alignment = .top
-        secondaryRow.spacing = 12
-        secondaryRow.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            secondaryRow.widthAnchor.constraint(equalToConstant: Layout.contentWidth),
-            secondaryRow.heightAnchor.constraint(equalToConstant: 66)
-        ])
-
-        secondaryRow.addArrangedSubview(
-            makeSecondaryMetricBlock(
-                title: localizer.t("menu.swap"),
-                value: PercentFormatter.compact(swapProgress * 100),
-                detail: ByteFormatter.memory(memorySnapshot.swapUsedBytes),
-                progress: swapProgress,
-                threshold: thresholdConfiguration.swapLimitEnabled ? 1 : nil,
-                isExceeded: thresholdConfiguration.swapLimitEnabled && memorySnapshot.swapUsedBytes >= thresholdConfiguration.swapLimitBytes,
-                systemImageName: "arrow.triangle.2.circlepath"
-            )
-        )
-        secondaryRow.addArrangedSubview(
-            makeSecondaryMetricBlock(
-                title: localizer.t("menu.compressed"),
-                value: PercentFormatter.compact(compressedProgress * 100),
-                detail: ByteFormatter.memory(memorySnapshot.compressedBytes),
-                progress: compressedProgress,
-                threshold: nil,
-                isExceeded: false,
-                systemImageName: "rectangle.compress.vertical"
-            )
-        )
-
-        root.addArrangedSubview(secondaryRow)
-    }
-
-    private func makeHeader(isExceeded: Bool) -> NSView {
-        let row = NSStackView()
-        row.orientation = .horizontal
-        row.alignment = .centerY
-        row.spacing = 8
-        row.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            row.widthAnchor.constraint(equalToConstant: Layout.contentWidth),
-            row.heightAnchor.constraint(equalToConstant: 24)
-        ])
-
-        let iconView = NSImageView(image: StatusIconFactory.makeImage(isExceeded: isExceeded))
-        iconView.imageScaling = .scaleProportionallyDown
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            iconView.widthAnchor.constraint(equalToConstant: 18),
-            iconView.heightAnchor.constraint(equalToConstant: 18)
-        ])
-
-        let titleLabel = label(
-            "GreenRAM",
-            font: .systemFont(ofSize: 13, weight: .semibold),
-            color: .labelColor
-        )
-        let spacer = NSView()
-        let statusLabel = label(
-            isExceeded ? localizer.t("status.exceeded") : localizer.t("status.withinLimits"),
-            font: .systemFont(ofSize: 13, weight: .semibold),
-            color: statusColor(isExceeded)
-        )
-
-        row.addArrangedSubview(iconView)
-        row.addArrangedSubview(titleLabel)
-        row.addArrangedSubview(spacer)
-        row.addArrangedSubview(statusLabel)
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        statusLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return row
-    }
-
-    private func makePrimaryRAMBlock(
-        memorySnapshot: SystemMemorySnapshot,
-        thresholdConfiguration: MemoryThresholdConfiguration,
-        isExceeded: Bool
-    ) -> NSView {
-        let color = statusColor(isExceeded)
-        let block = DashboardBlockView()
-        block.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            block.widthAnchor.constraint(equalToConstant: Layout.contentWidth),
-            block.heightAnchor.constraint(equalToConstant: 86)
-        ])
-
-        let stack = NSStackView()
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        block.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: block.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: block.trailingAnchor, constant: -14),
-            stack.topAnchor.constraint(equalTo: block.topAnchor, constant: 12),
-            stack.bottomAnchor.constraint(equalTo: block.bottomAnchor, constant: -12)
-        ])
-
-        let topRow = NSStackView()
-        topRow.orientation = .horizontal
-        topRow.alignment = .centerY
-        topRow.spacing = 10
-        topRow.translatesAutoresizingMaskIntoConstraints = false
-        topRow.widthAnchor.constraint(equalToConstant: Layout.contentWidth - 28).isActive = true
-
-        let titleStack = NSStackView()
-        titleStack.orientation = .vertical
-        titleStack.alignment = .leading
-        titleStack.spacing = 2
-
-        let titleLabel = label(
-            localizer.t("menu.ram"),
-            font: .systemFont(ofSize: 13, weight: .semibold),
-            color: .labelColor
-        )
-        let detailLabel = label(
-            "\(ByteFormatter.memory(memorySnapshot.usedPhysicalBytes)) / \(ByteFormatter.memory(memorySnapshot.totalPhysicalBytes))",
-            font: .monospacedDigitSystemFont(ofSize: 12, weight: .medium),
-            color: .secondaryLabelColor
-        )
-        titleStack.addArrangedSubview(titleLabel)
-        titleStack.addArrangedSubview(detailLabel)
-
-        let spacer = NSView()
-        let percentLabel = label(
-            PercentFormatter.compact(memorySnapshot.usedPhysicalPercent),
-            font: .monospacedDigitSystemFont(ofSize: 34, weight: .bold),
-            color: color
-        )
-
-        topRow.addArrangedSubview(titleStack)
-        topRow.addArrangedSubview(spacer)
-        topRow.addArrangedSubview(percentLabel)
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        percentLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-
-        let bar = MemoryMenuBarView(
-            progress: memorySnapshot.usedPhysicalPercent / 100,
-            threshold: thresholdConfiguration.ramLimitPercent / 100,
-            color: color
-        )
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            bar.widthAnchor.constraint(equalToConstant: Layout.contentWidth - 28),
-            bar.heightAnchor.constraint(equalToConstant: 12)
-        ])
-
-        stack.addArrangedSubview(topRow)
-        stack.addArrangedSubview(bar)
-        return block
-    }
-
-    private func makeSecondaryMetricBlock(
-        title: String,
-        value: String,
-        detail: String,
-        progress: Double,
-        threshold: Double?,
-        isExceeded: Bool,
-        systemImageName: String
-    ) -> NSView {
-        let color = statusColor(isExceeded)
-        let block = DashboardBlockView()
-        block.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            block.widthAnchor.constraint(equalToConstant: 174),
-            block.heightAnchor.constraint(equalToConstant: 66)
-        ])
-
-        let stack = NSStackView()
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 5
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        block.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: block.leadingAnchor, constant: 10),
-            stack.trailingAnchor.constraint(equalTo: block.trailingAnchor, constant: -10),
-            stack.topAnchor.constraint(equalTo: block.topAnchor, constant: 9),
-            stack.bottomAnchor.constraint(equalTo: block.bottomAnchor, constant: -9)
-        ])
-
-        let titleRow = NSStackView()
-        titleRow.orientation = .horizontal
-        titleRow.alignment = .centerY
-        titleRow.spacing = 6
-        titleRow.translatesAutoresizingMaskIntoConstraints = false
-        titleRow.widthAnchor.constraint(equalToConstant: 154).isActive = true
-
-        let iconView = NSImageView()
-        iconView.image = NSImage(systemSymbolName: systemImageName, accessibilityDescription: nil)
-        iconView.contentTintColor = color
-        iconView.imageScaling = .scaleProportionallyDown
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            iconView.widthAnchor.constraint(equalToConstant: 15),
-            iconView.heightAnchor.constraint(equalToConstant: 15)
-        ])
-
-        let titleLabel = label(title, font: .systemFont(ofSize: 12, weight: .semibold), color: .labelColor)
-        let spacer = NSView()
-        let valueLabel = label(value, font: .monospacedDigitSystemFont(ofSize: 16, weight: .bold), color: color)
-        valueLabel.alignment = .right
-
-        titleRow.addArrangedSubview(iconView)
-        titleRow.addArrangedSubview(titleLabel)
-        titleRow.addArrangedSubview(spacer)
-        titleRow.addArrangedSubview(valueLabel)
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        valueLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-
-        let bar = MemoryMenuBarView(progress: progress, threshold: threshold, color: color)
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            bar.widthAnchor.constraint(equalToConstant: 154),
-            bar.heightAnchor.constraint(equalToConstant: 8)
-        ])
-
-        let detailLabel = label(
-            detail,
-            font: .monospacedDigitSystemFont(ofSize: 11, weight: .medium),
-            color: .secondaryLabelColor
-        )
-
-        stack.addArrangedSubview(titleRow)
-        stack.addArrangedSubview(bar)
-        stack.addArrangedSubview(detailLabel)
-        return block
-    }
-
-    private func label(_ text: String, font: NSFont, color: NSColor) -> NSTextField {
-        let label = NSTextField(labelWithString: text)
-        label.font = font
-        label.textColor = color
-        label.lineBreakMode = .byTruncatingTail
-        label.maximumNumberOfLines = 1
-        return label
-    }
-
-    private func statusColor(_ isExceeded: Bool) -> NSColor {
-        isExceeded ? .systemRed : .systemGreen
-    }
-
-    private func progress(_ value: Double, total: Double) -> Double {
-        guard total > 0 else { return 0 }
-        return min(max(value / total, 0), 1)
-    }
-}
-
-private final class DashboardBlockView: NSView {
-    override var isOpaque: Bool {
-        false
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        let rect = bounds.insetBy(dx: 0.5, dy: 0.5)
-        let path = NSBezierPath(roundedRect: rect, xRadius: 8, yRadius: 8)
-        NSColor.labelColor.withAlphaComponent(0.045).setFill()
-        path.fill()
-
-        NSColor.separatorColor.withAlphaComponent(0.16).setStroke()
-        path.lineWidth = 1
-        path.stroke()
-    }
-}
-
-private final class MemoryMenuBarView: NSView {
-    private let progress: Double
-    private let threshold: Double?
-    private let color: NSColor
-
-    init(progress: Double, threshold: Double?, color: NSColor) {
-        self.progress = min(max(progress, 0), 1)
-        self.threshold = threshold.map { min(max($0, 0), 1) }
-        self.color = color
-        super.init(frame: .zero)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        let rect = bounds.insetBy(dx: 0, dy: 2)
-        let track = NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2)
-        NSColor.separatorColor.withAlphaComponent(0.35).setFill()
-        track.fill()
-
-        if progress > 0 {
-            let fillWidth = max(rect.height, rect.width * progress)
-            let fillRect = NSRect(x: rect.minX, y: rect.minY, width: min(fillWidth, rect.width), height: rect.height)
-            let fill = NSBezierPath(roundedRect: fillRect, xRadius: rect.height / 2, yRadius: rect.height / 2)
-            color.setFill()
-            fill.fill()
-        }
-
-        if let threshold {
-            let markerX = rect.minX + rect.width * threshold
-            let markerRect = NSRect(x: markerX - 1, y: rect.minY - 2, width: 2, height: rect.height + 4)
-            NSColor.labelColor.withAlphaComponent(0.35).setFill()
-            NSBezierPath(roundedRect: markerRect, xRadius: 1, yRadius: 1).fill()
-        }
     }
 }
 

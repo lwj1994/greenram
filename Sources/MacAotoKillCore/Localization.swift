@@ -159,14 +159,6 @@ public struct Localizer: Equatable {
             .de: "Auslagerung",
             .fr: "Swap"
         ],
-        "menu.compressed": [
-            .en: "Compressed",
-            .zhHans: "压缩内存",
-            .zhHant: "壓縮記憶體",
-            .ja: "圧縮メモリ",
-            .de: "Komprimiert",
-            .fr: "Compressée"
-        ],
         "menu.frontmost": [
             .en: "Frontmost",
             .zhHans: "前台应用",
@@ -352,20 +344,20 @@ public struct Localizer: Equatable {
             .fr: "Non nettoyée"
         ],
         "menu.noBackgroundApps": [
-            .en: "No background regular apps",
-            .zhHans: "没有后台普通应用",
-            .zhHant: "沒有背景普通 App",
-            .ja: "バックグラウンドアプリなし",
-            .de: "Keine normalen Hintergrund-Apps",
-            .fr: "Aucune app standard en arrière-plan"
+            .en: "No apps",
+            .zhHans: "没有 App",
+            .zhHant: "沒有 App",
+            .ja: "アプリなし",
+            .de: "Keine Apps",
+            .fr: "Aucune app"
         ],
         "menu.backgroundApps": [
-            .en: "All Background Apps",
-            .zhHans: "全部后台应用",
-            .zhHant: "全部背景 App",
-            .ja: "バックグラウンドアプリ",
-            .de: "Hintergrund-Apps",
-            .fr: "Apps en arrière-plan"
+            .en: "All Apps",
+            .zhHans: "全部 App",
+            .zhHant: "全部 App",
+            .ja: "すべてのアプリ",
+            .de: "Alle Apps",
+            .fr: "Toutes les apps"
         ],
         "menu.noWhitelistItems": [
             .en: "No whitelist items",
@@ -545,24 +537,24 @@ public struct Localizer: Equatable {
         ],
         "settings.ramUsed": [
             .en: "RAM Used",
-            .zhHans: "已用物理内存",
-            .zhHant: "已用實體記憶體",
+            .zhHans: "物理内存",
+            .zhHant: "實體記憶體",
             .ja: "使用中のRAM",
             .de: "Verwendeter RAM",
             .fr: "RAM utilisée"
         ],
         "settings.swapUsed": [
             .en: "Swap Used",
-            .zhHans: "已用交换内存",
-            .zhHant: "已用交換記憶體",
+            .zhHans: "交换内存",
+            .zhHant: "交換記憶體",
             .ja: "使用中のスワップ",
             .de: "Verwendete Auslagerung",
             .fr: "Swap utilisé"
         ],
         "settings.releaseThresholds": [
             .en: "Status Limits",
-            .zhHans: "状态显示上限",
-            .zhHant: "狀態顯示上限",
+            .zhHans: "清理触发限制",
+            .zhHant: "清理觸發限制",
             .ja: "状態表示の上限",
             .de: "Status-Grenzwerte",
             .fr: "Limites d'etat"
@@ -585,24 +577,24 @@ public struct Localizer: Equatable {
         ],
         "settings.swapLimit": [
             .en: "Swap Max",
-            .zhHans: "Swap 最大值",
-            .zhHant: "Swap 最大值",
+            .zhHans: "交换内存限制",
+            .zhHant: "交換記憶體限制",
             .ja: "Swap上限",
             .de: "Swap-Maximum",
             .fr: "Swap max"
         ],
         "settings.swapLimitEnabled": [
             .en: "Use Swap limit",
-            .zhHans: "启用 Swap 阈值",
-            .zhHant: "啟用 Swap 閾值",
+            .zhHans: "启用交换内存限制",
+            .zhHant: "啟用交換記憶體限制",
             .ja: "Swap上限を使う",
             .de: "Swap-Limit verwenden",
             .fr: "Utiliser la limite Swap"
         ],
         "settings.swapMinimumHint": [
-            .en: "Default is half of physical RAM. Minimum is 2 GB. Turn this off to ignore Swap.",
-            .zhHans: "默认是物理内存的一半；最低 2GB。关闭开关即可忽略 Swap。",
-            .zhHant: "預設是實體記憶體的一半；最低 2GB。關閉開關即可忽略 Swap。",
+            .en: "Swap uses disk as virtual memory. Sustained high swap can slow apps down. General recommendation: 8 GB or less.",
+            .zhHans: "交换内存会占用磁盘作为虚拟内存。数值持续偏高时，App 可能变慢；一般建议设置为 8GB 以内。",
+            .zhHant: "交換記憶體會占用磁碟作為虛擬記憶體。數值持續偏高時，App 可能變慢；一般建議設定為 8GB 以內。",
             .ja: "既定値は物理メモリの半分、最小は2GBです。無視するにはオフにします。",
             .de: "Standard ist die Hälfte des physischen RAMs, mindestens 2 GB. Zum Ignorieren ausschalten.",
             .fr: "Par défaut: moitié de la RAM physique, minimum 2 Go. Désactivez pour ignorer le swap."
@@ -655,6 +647,38 @@ public struct Localizer: Equatable {
             .de: "Standard-Hintergrundzeit",
             .fr: "Temps arriere-plan par defaut"
         ],
+        "settings.rules": [
+            .en: "App Rules",
+            .zhHans: "应用规则",
+            .zhHant: "App 規則",
+            .ja: "アプリルール",
+            .de: "App-Regeln",
+            .fr: "Règles des apps"
+        ],
+        "settings.manageRules": [
+            .en: "Manage app rules",
+            .zhHans: "管理应用规则",
+            .zhHant: "管理 App 規則",
+            .ja: "アプリルールを管理",
+            .de: "App-Regeln verwalten",
+            .fr: "Gérer les règles des apps"
+        ],
+        "settings.rulesSummary": [
+            .en: "%d auto-quit rules · %d protected apps",
+            .zhHans: "%d 个自动退出规则 · %d 个保护项",
+            .zhHant: "%d 個自動退出規則 · %d 個保護項",
+            .ja: "自動終了ルール %d 件 · 保護中 %d 件",
+            .de: "%d Auto-Beenden-Regeln · %d geschützte Apps",
+            .fr: "%d règles d'auto-fermeture · %d apps protégées"
+        ],
+        "settings.rulesPageHint": [
+            .en: "Auto-Quit Apps and protected apps are managed here.",
+            .zhHans: "自动退出 App 和保护项集中在这里管理。",
+            .zhHant: "自動退出 App 和保護項集中在這裡管理。",
+            .ja: "自動終了アプリと保護中のアプリをここで管理します。",
+            .de: "Apps zum automatischen Beenden und geschützte Apps werden hier verwaltet.",
+            .fr: "Les apps en auto-fermeture et protégées se gèrent ici."
+        ],
         "settings.appIdleTimes": [
             .en: "Auto-Quit Apps",
             .zhHans: "自动退出 App",
@@ -664,12 +688,12 @@ public struct Localizer: Equatable {
             .fr: "Apps en auto-fermeture"
         ],
         "settings.appIdleTimesHint": [
-            .en: "Auto-quit apps exit once their non-frontmost time limit is met. Other apps also need RAM or Swap limits exceeded.",
-            .zhHans: "自动退出 App 只看非前台时间。其他 App 还需要 RAM 或 Swap 状态超限。",
-            .zhHant: "自動退出 App 只看非前台時間。其他 App 還需要 RAM 或 Swap 狀態超限。",
-            .ja: "自動終了アプリは背景時間だけで終了します。他のアプリには RAM または Swap の上限超過も必要です。",
-            .de: "Auto-Beenden-Apps brauchen nur die Hintergrundzeit. Andere Apps brauchen zusaetzlich RAM- oder Swap-Limits.",
-            .fr: "Les apps en auto-fermeture suivent seulement le temps hors premier plan. Les autres exigent aussi une limite RAM ou Swap depassee."
+            .en: "Apps added here quit after being out of focus for the set time.",
+            .zhHans: "加入这里的 App，离开前台达到设定时间就会退出。",
+            .zhHant: "加入這裡的 App，離開前台達到設定時間就會退出。",
+            .ja: "ここに追加したアプリは、最前面でない時間が設定値に達すると終了します。",
+            .de: "Apps in dieser Liste werden beendet, sobald sie lange genug nicht im Vordergrund waren.",
+            .fr: "Les apps ajoutees ici se ferment apres le delai defini hors premier plan."
         ],
         "settings.noAppIdleTimeItems": [
             .en: "No auto-quit app rules",
@@ -728,12 +752,12 @@ public struct Localizer: Equatable {
             .fr: "Reinitialiser les reglages de nettoyage ?"
         ],
         "settings.resetConfirmMessage": [
-            .en: "This restores status limits and removes auto-quit app rules. Language will stay unchanged.",
-            .zhHans: "这会恢复状态显示上限，并移除自动退出 App 规则。语言设置不会改变。",
-            .zhHant: "這會恢復狀態顯示上限，並移除自動退出 App 規則。語言設定不會改變。",
-            .ja: "状態表示の上限を既定値に戻し、自動終了ルールを削除します。言語設定は変更されません。",
-            .de: "Status-Grenzwerte werden zurueckgesetzt und Regeln zum automatischen Beenden entfernt. Die Sprache bleibt unveraendert.",
-            .fr: "Les limites d'etat seront reinitialisees et les regles d'auto-fermeture supprimees. La langue restera inchangee."
+            .en: "This restores the swap limit and removes auto-quit app rules. Language will stay unchanged.",
+            .zhHans: "这会恢复交换内存限制，并移除自动退出 App 规则。语言设置不会改变。",
+            .zhHant: "這會恢復交換記憶體限制，並移除自動退出 App 規則。語言設定不會改變。",
+            .ja: "Swap上限を既定値に戻し、自動終了ルールを削除します。言語設定は変更されません。",
+            .de: "Das Swap-Limit wird zurückgesetzt und Regeln zum automatischen Beenden werden entfernt. Die Sprache bleibt unverändert.",
+            .fr: "La limite de swap sera réinitialisée et les règles d'auto-fermeture supprimées. La langue restera inchangée."
         ],
         "settings.resetConfirmButton": [
             .en: "Reset",

@@ -88,7 +88,6 @@ final class MemoryThresholdEvaluatorTests: XCTestCase {
             totalPhysicalBytes: totalPhysicalBytes,
             usedPhysicalBytes: usedPhysicalBytes,
             freePhysicalBytes: totalPhysicalBytes - usedPhysicalBytes,
-            compressedBytes: 0,
             swapTotalBytes: 8_000,
             swapUsedBytes: swapUsedBytes,
             swapAvailableBytes: 8_000 - swapUsedBytes

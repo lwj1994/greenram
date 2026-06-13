@@ -10,11 +10,17 @@ let package = Package(
     products: [
         .executable(name: "GreenRAM", targets: ["GreenRAM"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/lwj1994/apple_view_model.git", from: "0.3.0")
+    ],
     targets: [
         .target(name: "MacAotoKillCore"),
         .executableTarget(
             name: "GreenRAM",
-            dependencies: ["MacAotoKillCore"],
+            dependencies: [
+                "MacAotoKillCore",
+                .product(name: "AppleViewModel", package: "apple_view_model")
+            ],
             path: "Sources/MacAotoKill"
         ),
         .testTarget(

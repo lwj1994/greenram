@@ -6,7 +6,6 @@ public struct SystemMemorySnapshot: Equatable {
     public let totalPhysicalBytes: UInt64
     public let usedPhysicalBytes: UInt64
     public let freePhysicalBytes: UInt64
-    public let compressedBytes: UInt64
     public let swapTotalBytes: UInt64
     public let swapUsedBytes: UInt64
     public let swapAvailableBytes: UInt64
@@ -26,7 +25,6 @@ public struct SystemMemorySnapshot: Equatable {
         totalPhysicalBytes: UInt64,
         usedPhysicalBytes: UInt64,
         freePhysicalBytes: UInt64,
-        compressedBytes: UInt64,
         swapTotalBytes: UInt64,
         swapUsedBytes: UInt64,
         swapAvailableBytes: UInt64
@@ -35,7 +33,6 @@ public struct SystemMemorySnapshot: Equatable {
         self.totalPhysicalBytes = totalPhysicalBytes
         self.usedPhysicalBytes = usedPhysicalBytes
         self.freePhysicalBytes = freePhysicalBytes
-        self.compressedBytes = compressedBytes
         self.swapTotalBytes = swapTotalBytes
         self.swapUsedBytes = swapUsedBytes
         self.swapAvailableBytes = swapAvailableBytes
@@ -77,14 +74,12 @@ public enum SystemMemoryMonitor {
         let swap = captureSwapUsage()
         let pageSize = UInt64(vmStats.pageSize)
         let freeBytes = UInt64(vmStats.statistics.free_count) * pageSize
-        let compressedBytes = UInt64(vmStats.statistics.compressor_page_count) * pageSize
         let usedBytes = totalPhysicalBytes > freeBytes ? totalPhysicalBytes - freeBytes : 0
 
         return SystemMemorySnapshot(
             totalPhysicalBytes: totalPhysicalBytes,
             usedPhysicalBytes: usedBytes,
             freePhysicalBytes: freeBytes,
-            compressedBytes: compressedBytes,
             swapTotalBytes: swap.total,
             swapUsedBytes: swap.used,
             swapAvailableBytes: swap.available

@@ -17,6 +17,53 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertTrue(store.automaticUpdateReminderEnabled)
     }
 
+    func testDefaultSwapLimitIsEightGB() {
+        XCTAssertEqual(MemoryPolicyDefaults.swapLimitBytes, 8 * 1024 * 1024 * 1024)
+    }
+
+    func testLegacyDynamicSwapLimitDefaultMigratesToEightGB() {
+        let legacyDefault = min(
+            MemoryPolicyDefaults.maximumSwapLimitBytes,
+            max(MemoryPolicyDefaults.minimumSwapLimitBytes, ProcessInfo.processInfo.physicalMemory / 2)
+        )
+        guard legacyDefault != MemoryPolicyDefaults.defaultSwapLimitBytes else { return }
+
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(Double(legacyDefault), forKey: "swapLimitBytes")
+
+        let store = SettingsStore(defaults: defaults)
+
+        XCTAssertEqual(store.swapLimitBytes, MemoryPolicyDefaults.defaultSwapLimitBytes)
+    }
+
+    func testLegacyNearEightGBSwapLimitDriftMigratesToEightGB() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(
+            Double(MemoryPolicyDefaults.defaultSwapLimitBytes + 256 * 1024 * 1024),
+            forKey: "swapLimitBytes"
+        )
+
+        let store = SettingsStore(defaults: defaults)
+
+        XCTAssertEqual(store.swapLimitBytes, MemoryPolicyDefaults.defaultSwapLimitBytes)
+    }
+
+    func testStartupRemovesLegacyRamLimitOverride() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(80, forKey: "ramLimitPercent")
+
+        let store = SettingsStore(defaults: defaults)
+
+        XCTAssertEqual(store.ramLimitPercent, 100)
+        XCTAssertNil(defaults.object(forKey: "ramLimitPercent"))
+    }
+
     func testSwapLimitClampsToMinimum() {
         let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
@@ -26,6 +73,17 @@ final class SettingsStoreTests: XCTestCase {
         store.swapLimitBytes = 0
 
         XCTAssertEqual(store.swapLimitBytes, MemoryPolicyDefaults.minimumSwapLimitBytes)
+    }
+
+    func testSwapLimitClampsToMaximum() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(defaults: defaults)
+        store.swapLimitBytes = 128 * 1024 * 1024 * 1024
+
+        XCTAssertEqual(store.swapLimitBytes, MemoryPolicyDefaults.maximumSwapLimitBytes)
     }
 
     func testAutoQuitBackgroundDurationsPersistAndClampToMinimum() {

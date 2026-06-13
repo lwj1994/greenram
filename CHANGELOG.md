@@ -4,6 +4,14 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.1.10 - 2026-06-13
+
+- Refactored Settings into a cleaner SwiftUI and AppleViewModel structure, with app-rule management moved into a focused rules page.
+- Redesigned the menu memory dashboard to reuse the Settings ring indicators, adapt its height, and show cleaner RAM and Swap labels.
+- Changed the default Swap limit to 8 GB, capped configurable Swap limits at 64 GB, and migrated legacy default values.
+- Force legacy RAM limit overrides back to 100% at startup.
+- Simplified cleanup wording and menu labels, including "All Apps" and clearer Auto-Quit Apps explanations.
+
 ## v0.1.9 - 2026-06-08
 
 - Added GitHub Releases update checks with a manual menu action.

@@ -20,6 +20,9 @@ public final class SettingsStore {
 
     public init(defaults: UserDefaults) {
         self.defaults = defaults
+        defaults.removeObject(forKey: ramLimitPercentKey)
+        migrateLegacyDynamicSwapLimitDefault()
+        defaults.synchronize()
     }
 
     public var autoReleaseEnabled: Bool {
@@ -35,13 +38,13 @@ public final class SettingsStore {
     }
 
     public var ramLimitPercent: Double {
-        get { double(forKey: ramLimitPercentKey, defaultValue: MemoryPolicyDefaults.ramLimitPercent) }
-        set { defaults.set(clamp(newValue, min: 1, max: 100), forKey: ramLimitPercentKey) }
+        get { MemoryPolicyDefaults.ramLimitPercent }
+        set { defaults.removeObject(forKey: ramLimitPercentKey) }
     }
 
     public var swapLimitBytes: UInt64 {
-        get { uint64(forKey: swapLimitBytesKey, defaultValue: MemoryPolicyDefaults.swapLimitBytes) }
-        set { defaults.set(Double(max(newValue, MemoryPolicyDefaults.minimumSwapLimitBytes)), forKey: swapLimitBytesKey) }
+        get { clampedSwapLimitBytes(uint64(forKey: swapLimitBytesKey, defaultValue: MemoryPolicyDefaults.swapLimitBytes)) }
+        set { defaults.set(Double(clampedSwapLimitBytes(newValue)), forKey: swapLimitBytesKey) }
     }
 
     public var swapLimitEnabled: Bool {
@@ -197,5 +200,31 @@ public final class SettingsStore {
 
     private func clampedBackgroundDuration(_ value: TimeInterval) -> TimeInterval {
         max(MemoryPolicyDefaults.minimumConfigurableBackgroundDuration, value)
+    }
+
+    private func clampedSwapLimitBytes(_ value: UInt64) -> UInt64 {
+        min(
+            MemoryPolicyDefaults.maximumSwapLimitBytes,
+            max(MemoryPolicyDefaults.minimumSwapLimitBytes, value)
+        )
+    }
+
+    private func migrateLegacyDynamicSwapLimitDefault() {
+        guard defaults.object(forKey: swapLimitBytesKey) != nil else { return }
+
+        let legacyDefault = min(
+            MemoryPolicyDefaults.maximumSwapLimitBytes,
+            max(MemoryPolicyDefaults.minimumSwapLimitBytes, ProcessInfo.processInfo.physicalMemory / 2)
+        )
+        let storedValue = uint64(forKey: swapLimitBytesKey, defaultValue: MemoryPolicyDefaults.swapLimitBytes)
+        let oneGiB = UInt64(1024 * 1024 * 1024)
+        let isNearEightGBLegacyDrift = storedValue > MemoryPolicyDefaults.defaultSwapLimitBytes
+            && storedValue < MemoryPolicyDefaults.defaultSwapLimitBytes + oneGiB
+        guard (storedValue == legacyDefault || isNearEightGBLegacyDrift),
+              storedValue != MemoryPolicyDefaults.defaultSwapLimitBytes else {
+            return
+        }
+
+        defaults.set(Double(MemoryPolicyDefaults.defaultSwapLimitBytes), forKey: swapLimitBytesKey)
     }
 }
