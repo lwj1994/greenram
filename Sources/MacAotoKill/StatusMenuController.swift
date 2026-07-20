@@ -10,6 +10,8 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private let foregroundTracker = ForegroundTracker()
     private let settingsStore = SettingsStore()
     private let eventLog = EventLog()
+    private let memoryPressureWatcher = MemoryPressureWatcher()
+    private var memoryPressureLevel: MemoryPressureLevel = .normal
     private var settingsWindowController: SettingsWindowController?
     private var updateCheckTask: Task<Void, Never>?
     private var isCheckingForUpdates = false
@@ -48,10 +50,23 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         Localizer(languageCode: settingsStore.languageCode)
     }
 
+    private var isSystemMemoryGateExceeded: Bool {
+        thresholdEvaluation.isExceeded || memoryPressureLevel != .normal
+    }
+
     override init() {
         super.init()
         configureStatusItem()
         foregroundTracker.start()
+        memoryPressureWatcher.onPressure = { [weak self] level in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.memoryPressureLevel = level
+                self.eventLog.append(self.localizer.t("event.memoryPressureChanged", level.localizedName(self.localizer)))
+                self.refreshSnapshot(performAutomaticRelease: level != .normal)
+            }
+        }
+        memoryPressureWatcher.start()
         startTimer()
         refreshSnapshot()
         eventLog.append(localizer.t("event.started"))
@@ -64,6 +79,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         updateCheckTask?.cancel()
         updateCheckTask = nil
         foregroundTracker.stop()
+        memoryPressureWatcher.stop()
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -106,9 +122,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             minimumBackgroundDurationsByBundleID: settingsStore.minimumBackgroundDurationsByBundleID,
             autoQuitBundleIDs: settingsStore.autoQuitBundleIDs,
             memoryLimitsByBundleID: settingsStore.memoryLimitsByBundleID,
-            isMemoryLimitExceeded: thresholdEvaluation.isExceeded,
+            isMemoryLimitExceeded: isSystemMemoryGateExceeded,
             maxAppsPerSweep: settingsStore.maxAppsPerSweep,
-            forceTerminateImmediately: true
+            forceTerminateImmediately: false
         )
     }
 
@@ -135,10 +151,10 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
     private func updateStatusTitle() {
         let candidateCount = memoryPolicyEngine.candidates(for: snapshot).count
-        statusItem.button?.image = StatusIconFactory.makeImage(isExceeded: thresholdEvaluation.isExceeded)
+        statusItem.button?.image = StatusIconFactory.makeImage(isExceeded: isSystemMemoryGateExceeded)
         statusItem.button?.toolTip = candidateCount > 0
             ? "\(localizer.t("dashboard.candidates")) · \(candidateCount)"
-            : (thresholdEvaluation.isExceeded ? localizer.t("status.exceeded") : localizer.t("status.withinLimits"))
+            : (isSystemMemoryGateExceeded ? localizer.t("status.exceeded") : localizer.t("status.withinLimits"))
     }
 
     private func rebuildMenu() {
@@ -207,11 +223,11 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let thresholdConfiguration = makeThresholdConfiguration()
         let content = MemoryDashboardMenuContent(
             title: "GreenRAM",
-            statusText: thresholdEvaluation.isExceeded
+            statusText: isSystemMemoryGateExceeded
                 ? localizer.t("status.exceeded")
                 : localizer.t("status.withinLimits"),
-            isExceeded: thresholdEvaluation.isExceeded,
-            icon: StatusIconFactory.makeImage(isExceeded: thresholdEvaluation.isExceeded),
+            isExceeded: isSystemMemoryGateExceeded,
+            icon: StatusIconFactory.makeImage(isExceeded: isSystemMemoryGateExceeded),
             ramMetric: MemoryMetricDisplays.ram(
                 snapshot: memorySnapshot,
                 ramLimitPercent: thresholdConfiguration.ramLimitPercent,
@@ -290,8 +306,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             submenu.addItem(item)
         } else {
             for app in candidates {
+                let decision = memoryPolicyEngine.decision(for: app)
                 let item = NSMenuItem(
-                    title: "\(app.displayName) - \(memorySummary(for: app))",
+                    title: "\(app.displayName) - \(memorySummary(for: app)) - \(cleanupReason(for: decision))",
                     action: nil,
                     keyEquivalent: ""
                 )
@@ -348,6 +365,23 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             return localizer.t("menu.protected")
         }
         return nil
+    }
+
+    private func cleanupReason(for decision: CleanupDecision) -> String {
+        let idle = DurationFormatter.compact(decision.backgroundDuration, localizer: localizer)
+        switch decision.trigger {
+        case .autoQuitRule:
+            return "\(idle) · \(localizer.t("settings.autoQuitApps"))"
+        case .systemMemory:
+            let systemReason = memoryPressureLevel == .normal
+                ? thresholdEvaluation.summary
+                : localizer.t("event.systemPressure", memoryPressureLevel.localizedName(localizer))
+            return "\(idle) · \(systemReason)"
+        case .appMemory(let limitBytes):
+            return "\(idle) · \(localizer.t("settings.appMemoryLimits")) \(ByteFormatter.memory(limitBytes))"
+        case nil:
+            return idle
+        }
     }
 
     private func addWhitelistSubmenu() {

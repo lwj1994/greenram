@@ -15,7 +15,7 @@ public final class MemoryPressureWatcher {
         guard source == nil else { return }
 
         let source = DispatchSource.makeMemoryPressureSource(
-            eventMask: [.warning, .critical],
+            eventMask: [.normal, .warning, .critical],
             queue: queue
         )
         self.source = source
@@ -27,6 +27,8 @@ public final class MemoryPressureWatcher {
                 self.onPressure?(.critical)
             } else if data.contains(.warning) {
                 self.onPressure?(.warning)
+            } else if data.contains(.normal) {
+                self.onPressure?(.normal)
             }
         }
         source.resume()

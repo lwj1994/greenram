@@ -4,6 +4,13 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## Unreleased
+
+- Changed automatic cleanup to request a normal app quit instead of immediately force terminating eligible apps.
+- Added macOS memory-pressure events as an ordinary-app cleanup gate alongside the existing RAM, Swap, and per-app limits.
+- Added structured cleanup decisions so the menu can explain whether an app is eligible because of Auto-Quit, system memory, or its own memory limit.
+- Start the duplicate-request cooldown only after macOS accepts the quit request.
+
 ## v0.12.1 - 2026-06-29
 
 - Refined the app icon for macOS 13-15 by adding transparent padding and rounded corners to the legacy `.icns` asset.

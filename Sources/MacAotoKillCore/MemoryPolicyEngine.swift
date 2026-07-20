@@ -1,6 +1,35 @@
 import Darwin
 import Foundation
 
+public enum CleanupRuleGroup: Equatable {
+    case autoQuit
+    case ordinary
+}
+
+public enum CleanupTrigger: Equatable {
+    case autoQuitRule
+    case systemMemory
+    case appMemory(limitBytes: UInt64)
+}
+
+public enum CleanupExclusion: Equatable {
+    case ownApplication
+    case frontmost
+    case whitelisted
+    case backgroundTime(required: TimeInterval, actual: TimeInterval)
+    case memoryGateNotReached
+}
+
+public struct CleanupDecision: Equatable {
+    public let ruleGroup: CleanupRuleGroup
+    public let backgroundDuration: TimeInterval
+    public let backgroundThreshold: TimeInterval
+    public let trigger: CleanupTrigger?
+    public let exclusion: CleanupExclusion?
+
+    public var isEligible: Bool { exclusion == nil && trigger != nil }
+}
+
 public struct MemoryPolicyConfiguration: Equatable {
     public var autoReleaseEnabled: Bool
     public var minimumBackgroundDuration: TimeInterval
@@ -19,7 +48,7 @@ public struct MemoryPolicyConfiguration: Equatable {
         memoryLimitsByBundleID: [String: UInt64] = [:],
         isMemoryLimitExceeded: Bool = false,
         maxAppsPerSweep: Int = 3,
-        forceTerminateImmediately: Bool = true
+        forceTerminateImmediately: Bool = false
     ) {
         self.autoReleaseEnabled = autoReleaseEnabled
         self.minimumBackgroundDuration = minimumBackgroundDuration
@@ -107,11 +136,14 @@ public final class MemoryPolicyEngine {
         }
 
         for app in targets {
-            recentQuitRequestsByBundleID[app.bundleID] = now
+            let didSubmit: Bool
             if configuration.forceTerminateImmediately {
-                terminator?.forceQuit(app)
+                didSubmit = terminator?.forceQuit(app) ?? false
             } else {
-                terminator?.requestQuit(app, forceIfNeeded: false)
+                didSubmit = terminator?.requestQuit(app, forceIfNeeded: false) ?? false
+            }
+            if didSubmit {
+                recentQuitRequestsByBundleID[app.bundleID] = now
             }
         }
     }
@@ -133,16 +165,54 @@ public final class MemoryPolicyEngine {
     }
 
     public func shouldTerminate(_ app: AppRuntimeState, now: Date = Date()) -> Bool {
-        guard app.pid != ProcessInfo.processInfo.processIdentifier else { return false }
-        guard !AppIdentity.isOwnBundleIdentifier(app.bundleID) else { return false }
-        guard !app.isFrontmost else { return false }
-        guard !app.isWhitelisted else { return false }
+        return decision(for: app, now: now).isEligible
+    }
 
+    public func decision(for app: AppRuntimeState, now: Date = Date()) -> CleanupDecision {
         let isAutoQuitApp = configuration.isAutoQuitApp(app.bundleID)
-        let backgroundDurationThreshold = configuration.backgroundDurationThreshold(for: app.bundleID)
+        let group: CleanupRuleGroup = isAutoQuitApp ? .autoQuit : .ordinary
+        let threshold = configuration.backgroundDurationThreshold(for: app.bundleID)
+        let duration = app.backgroundDuration(now: now)
 
-        guard app.backgroundDuration(now: now) >= backgroundDurationThreshold else { return false }
-        return isAutoQuitApp || configuration.isMemoryLimitExceeded || configuration.isAppMemoryLimitExceeded(app)
+        func excluded(_ exclusion: CleanupExclusion) -> CleanupDecision {
+            CleanupDecision(
+                ruleGroup: group,
+                backgroundDuration: duration,
+                backgroundThreshold: threshold,
+                trigger: nil,
+                exclusion: exclusion
+            )
+        }
+
+        guard app.pid != ProcessInfo.processInfo.processIdentifier,
+              !AppIdentity.isOwnBundleIdentifier(app.bundleID) else {
+            return excluded(.ownApplication)
+        }
+        guard !app.isFrontmost else { return excluded(.frontmost) }
+        guard !app.isWhitelisted else { return excluded(.whitelisted) }
+        guard duration >= threshold else {
+            return excluded(.backgroundTime(required: threshold, actual: duration))
+        }
+
+        let trigger: CleanupTrigger
+        if isAutoQuitApp {
+            trigger = .autoQuitRule
+        } else if configuration.isAppMemoryLimitExceeded(app),
+                  let limit = configuration.memoryLimit(for: app.bundleID) {
+            trigger = .appMemory(limitBytes: limit)
+        } else if configuration.isMemoryLimitExceeded {
+            trigger = .systemMemory
+        } else {
+            return excluded(.memoryGateNotReached)
+        }
+
+        return CleanupDecision(
+            ruleGroup: group,
+            backgroundDuration: duration,
+            backgroundThreshold: threshold,
+            trigger: trigger,
+            exclusion: nil
+        )
     }
 
     public func score(_ app: AppRuntimeState, now: Date = Date()) -> Double {

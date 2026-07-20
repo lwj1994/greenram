@@ -264,12 +264,12 @@ public struct Localizer: Equatable {
             .fr: "Installation de la mise à jour..."
         ],
         "menu.releaseNow": [
-            .en: "Clean Apps Now",
-            .zhHans: "立即清理可清理 App",
-            .zhHant: "立即清理可清理 App",
-            .ja: "背景アプリを今すぐ整理",
-            .de: "Hintergrund-Apps jetzt bereinigen",
-            .fr: "Nettoyer les apps en arrière-plan"
+            .en: "Quit Eligible Apps Now",
+            .zhHans: "立即退出符合规则的 App",
+            .zhHant: "立即結束符合規則的 App",
+            .ja: "対象アプリを今すぐ終了",
+            .de: "Geeignete Apps jetzt beenden",
+            .fr: "Quitter les apps admissibles"
         ],
         "menu.quit": [
             .en: "Quit",

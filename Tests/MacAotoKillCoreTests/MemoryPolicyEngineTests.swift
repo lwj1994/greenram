@@ -6,12 +6,16 @@ final class MemoryPolicyEngineTests: XCTestCase {
         private(set) var quitApps: [AppRuntimeState] = []
         private(set) var forceQuitApps: [AppRuntimeState] = []
 
-        func requestQuit(_ app: AppRuntimeState, forceIfNeeded: Bool) {
+        var shouldSucceed = true
+
+        func requestQuit(_ app: AppRuntimeState, forceIfNeeded: Bool) -> Bool {
             quitApps.append(app)
+            return shouldSucceed
         }
 
-        func forceQuit(_ app: AppRuntimeState) {
+        func forceQuit(_ app: AppRuntimeState) -> Bool {
             forceQuitApps.append(app)
+            return shouldSucceed
         }
     }
 
@@ -59,6 +63,59 @@ final class MemoryPolicyEngineTests: XCTestCase {
         XCTAssertEqual(engine.candidates(for: [app], now: now).map(\.bundleID), ["test.auto-quit"])
     }
 
+    func testDecisionExplainsAutoQuitEligibility() {
+        let now = Date()
+        let engine = makeEngine(autoQuitBundleIDs: ["test.auto-quit"])
+        let app = makeApp(
+            bundleID: "test.auto-quit",
+            name: "Auto Quit",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        let decision = engine.decision(for: app, now: now)
+
+        XCTAssertTrue(decision.isEligible)
+        XCTAssertEqual(decision.ruleGroup, .autoQuit)
+        XCTAssertEqual(decision.trigger, .autoQuitRule)
+        XCTAssertNil(decision.exclusion)
+    }
+
+    func testDecisionExplainsBackgroundTimeExclusion() {
+        let now = Date()
+        let engine = makeEngine(autoQuitBundleIDs: ["test.recent"])
+        let app = makeApp(
+            bundleID: "test.recent",
+            name: "Recent",
+            lastBackgroundAt: now.addingTimeInterval(-10 * 60)
+        )
+
+        let decision = engine.decision(for: app, now: now)
+
+        XCTAssertFalse(decision.isEligible)
+        XCTAssertEqual(decision.ruleGroup, .autoQuit)
+        XCTAssertEqual(
+            decision.exclusion,
+            .backgroundTime(required: 30 * 60, actual: 10 * 60)
+        )
+    }
+
+    func testDecisionPrefersAppMemoryTriggerWhenBothMemoryGatesAreReached() {
+        let now = Date()
+        let limit = UInt64(1_024 * 1024 * 1024)
+        let engine = makeEngine(
+            memoryLimitsByBundleID: ["test.large": limit],
+            isMemoryLimitExceeded: true
+        )
+        let app = makeApp(
+            bundleID: "test.large",
+            name: "Large",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60),
+            memoryBytes: limit + 1
+        )
+
+        XCTAssertEqual(engine.decision(for: app, now: now).trigger, .appMemory(limitBytes: limit))
+    }
+
     func testPolicyNeverTargetsFrontmostWhitelistedOrRecentlyBackgroundedApps() {
         let now = Date()
         let engine = makeEngine(
@@ -81,9 +138,9 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                minimumBackgroundDurationsByBundleID: ["test.protected": 10 * 60],
+                minimumBackgroundDurationsByBundleID: ["test.protected": TimeInterval(10 * 60)],
                 autoQuitBundleIDs: ["test.protected"],
-                memoryLimitsByBundleID: ["test.protected": 512 * 1024 * 1024],
+                memoryLimitsByBundleID: ["test.protected": UInt64(512 * 1024 * 1024)],
                 isMemoryLimitExceeded: true
             ),
             terminator: TerminatorSpy(),
@@ -143,8 +200,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
 
         engine.handleAutomaticRelease(states: apps, now: now)
 
-        XCTAssertEqual(terminator.forceQuitApps.count, 2)
-        XCTAssertTrue(terminator.quitApps.isEmpty)
+        XCTAssertEqual(terminator.quitApps.count, 2)
+        XCTAssertTrue(terminator.forceQuitApps.isEmpty)
     }
 
     func testManualReleaseIgnoresAutoReleaseSwitch() {
@@ -169,7 +226,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
 
         engine.handleManualRelease(states: [app], now: now)
 
-        XCTAssertEqual(terminator.forceQuitApps.map(\.displayName), ["Background App"])
+        XCTAssertEqual(terminator.quitApps.map(\.displayName), ["Background App"])
     }
 
     func testAutoQuitListUsesPerAppBackgroundThresholds() {
@@ -178,8 +235,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.short": 10 * 60,
-                    "test.long": 60 * 60
+                    "test.short": TimeInterval(10 * 60),
+                    "test.long": TimeInterval(60 * 60)
                 ],
                 autoQuitBundleIDs: ["test.short", "test.long"]
             ),
@@ -228,8 +285,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.ordinary": 10 * 60,
-                    "test.auto-short": 10 * 60
+                    "test.ordinary": TimeInterval(10 * 60),
+                    "test.auto-short": TimeInterval(10 * 60)
                 ],
                 autoQuitBundleIDs: ["test.auto-short"]
             ),
@@ -240,8 +297,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.ordinary": 10 * 60,
-                    "test.auto-short": 10 * 60
+                    "test.ordinary": TimeInterval(10 * 60),
+                    "test.auto-short": TimeInterval(10 * 60)
                 ],
                 autoQuitBundleIDs: ["test.auto-short"],
                 isMemoryLimitExceeded: true
@@ -278,7 +335,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                memoryLimitsByBundleID: ["test.memory": 1_024 * 1024 * 1024]
+                memoryLimitsByBundleID: ["test.memory": UInt64(1_024 * 1024 * 1024)]
             ),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
@@ -300,8 +357,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                minimumBackgroundDurationsByBundleID: ["test.short-memory": 10 * 60],
-                memoryLimitsByBundleID: ["test.short-memory": 1_024 * 1024 * 1024]
+                minimumBackgroundDurationsByBundleID: ["test.short-memory": TimeInterval(10 * 60)],
+                memoryLimitsByBundleID: ["test.short-memory": UInt64(1_024 * 1024 * 1024)]
             ),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
@@ -337,7 +394,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
         engine.handleAutomaticRelease(states: [firstInstance], now: now)
         engine.handleAutomaticRelease(states: [relaunchedInstance], now: now.addingTimeInterval(60))
 
-        XCTAssertEqual(terminator.forceQuitApps.map(\.pid), [1_000])
+        XCTAssertEqual(terminator.quitApps.map(\.pid), [1_000])
     }
 
     func testDuplicateQuitCooldownAllowsSamePIDWithDifferentBundleID() {
@@ -367,7 +424,52 @@ final class MemoryPolicyEngineTests: XCTestCase {
         engine.handleAutomaticRelease(states: [originalApp], now: now)
         engine.handleAutomaticRelease(states: [reusedPIDApp], now: now.addingTimeInterval(60))
 
-        XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
+        XCTAssertEqual(terminator.quitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
+    }
+
+    func testFailedQuitRequestDoesNotStartDuplicateCooldown() {
+        let now = Date()
+        let terminator = TerminatorSpy()
+        terminator.shouldSucceed = false
+        let engine = MemoryPolicyEngine(
+            configuration: MemoryPolicyConfiguration(autoQuitBundleIDs: ["test.retry"]),
+            terminator: terminator,
+            logger: LoggerSpy()
+        )
+        let app = makeApp(
+            pid: 1_000,
+            bundleID: "test.retry",
+            name: "Retry",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        engine.handleAutomaticRelease(states: [app], now: now)
+        engine.handleAutomaticRelease(states: [app], now: now.addingTimeInterval(60))
+
+        XCTAssertEqual(terminator.quitApps.count, 2)
+    }
+
+    func testExplicitImmediateTerminationUsesForceQuit() {
+        let now = Date()
+        let terminator = TerminatorSpy()
+        let engine = MemoryPolicyEngine(
+            configuration: MemoryPolicyConfiguration(
+                autoQuitBundleIDs: ["test.force"],
+                forceTerminateImmediately: true
+            ),
+            terminator: terminator,
+            logger: LoggerSpy()
+        )
+        let app = makeApp(
+            bundleID: "test.force",
+            name: "Force",
+            lastBackgroundAt: now.addingTimeInterval(-31 * 60)
+        )
+
+        engine.handleAutomaticRelease(states: [app], now: now)
+
+        XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.force"])
+        XCTAssertTrue(terminator.quitApps.isEmpty)
     }
 
     private func makeEngine(
