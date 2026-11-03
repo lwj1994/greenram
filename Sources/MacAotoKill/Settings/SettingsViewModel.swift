@@ -13,6 +13,8 @@ final class SettingsViewModel: StateViewModel<SettingsState> {
     private let onWhitelistAdded: (String) -> Void
     private let onWhitelistRemoved: (String) -> Void
     private let onExportLogs: () -> Void
+    private let onCheckForUpdates: () -> Void
+    private let onShowOnboarding: () -> Void
 
     var localizer: Localizer {
         Localizer(languageCode: state.languageCode)
@@ -53,7 +55,9 @@ final class SettingsViewModel: StateViewModel<SettingsState> {
         onChange: @escaping () -> Void,
         onWhitelistAdded: @escaping (String) -> Void,
         onWhitelistRemoved: @escaping (String) -> Void,
-        onExportLogs: @escaping () -> Void
+        onExportLogs: @escaping () -> Void,
+        onCheckForUpdates: @escaping () -> Void,
+        onShowOnboarding: @escaping () -> Void
     ) {
         self.settingsStore = settingsStore
         self.whitelistStore = whitelistStore
@@ -62,6 +66,8 @@ final class SettingsViewModel: StateViewModel<SettingsState> {
         self.onWhitelistAdded = onWhitelistAdded
         self.onWhitelistRemoved = onWhitelistRemoved
         self.onExportLogs = onExportLogs
+        self.onCheckForUpdates = onCheckForUpdates
+        self.onShowOnboarding = onShowOnboarding
 
         super.init(
             state: Self.makeState(
@@ -285,6 +291,14 @@ final class SettingsViewModel: StateViewModel<SettingsState> {
 
     func exportLogs() {
         onExportLogs()
+    }
+
+    func checkForUpdates() {
+        onCheckForUpdates()
+    }
+
+    func showOnboarding() {
+        onShowOnboarding()
     }
 
     private var normalizedNewWhitelistBundleID: String {

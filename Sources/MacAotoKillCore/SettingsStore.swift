@@ -15,6 +15,7 @@ public final class SettingsStore {
     private let lastUpdateCheckAtKey = "lastUpdateCheckAt"
     private let lastPromptedUpdateVersionKey = "lastPromptedUpdateVersion"
     private let automaticUpdateReminderEnabledKey = "automaticUpdateReminderEnabled"
+    private let hasCompletedOnboardingKey = "hasCompletedOnboarding"
 
     public convenience init() {
         self.init(defaults: AppDefaults.make())
@@ -235,6 +236,11 @@ public final class SettingsStore {
         set {
             defaults.set(newValue, forKey: automaticUpdateReminderEnabledKey)
         }
+    }
+
+    public var hasCompletedOnboarding: Bool {
+        get { defaults.bool(forKey: hasCompletedOnboardingKey) }
+        set { defaults.set(newValue, forKey: hasCompletedOnboardingKey) }
     }
 
     public func resetMemoryPolicyDefaults() {

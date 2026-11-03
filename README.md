@@ -18,13 +18,18 @@ It is built for a simple case: keep the frontmost app responsive, remove backgro
 
 ## Features
 
-- Menu bar memory status with a green/red leaf icon.
+- Menu bar memory status with a green/red leaf icon; click it for a panel with RAM / Swap, the top memory apps, and quick actions.
+- Main window with a sidebar: overview, all apps, recent events, each app rule, and settings in one place.
+- Memory map: every app laid out as a treemap sized by its whole process tree, plus a memory composition bar (app memory, wired, compressed, cached files, free).
+- Welcome guide on first launch explaining the cleanup rules; it can be shown again from Settings.
 - RAM status display and a configurable Swap limit.
 - Auto-Quit Apps quit by non-frontmost time only.
 - Ordinary non-whitelisted apps quit after their non-frontmost timeout plus either a system memory gate or their own app memory limit.
 - Manual "Clean Apps Now" action.
 - Editable whitelist support for apps that should not be quit.
 - Multi-process memory accounting for browsers, Electron apps, Xcode helpers, and similar app trees.
+- Idle child process cleanup: ends idle CLI tools, language servers, MCP servers, and other external child processes without quitting their app.
+- Child process attribution: expand an app on the main window's "All Apps" page to see the processes it spawned.
 - Localized UI for Simplified Chinese, Traditional Chinese, English, Japanese, German, and French.
 
 ## Supported macOS Versions and Architectures
@@ -54,6 +59,20 @@ App type, Bundle ID keywords, and app-name keywords do not decide whether an app
 When multiple apps are cleanable, GreenRAM handles the apps that have stayed in the background longest first. Per-app memory is also used as a tie-breaker and for display.
 
 Each automatic sweep force quits at most 3 cleanable apps by default. Automatic sweeps have a 60-second cooldown, and the same Bundle ID is not requested again for 10 minutes. Manual "Clean Apps Now" uses the same cleanable-app criteria.
+
+## Idle Child Process Cleanup
+
+GreenRAM cleans idle external child processes inside an app's process tree without quitting the app itself. The typical case is language servers and MCP servers started by Claude Code or an IDE that stay resident after the session or project goes idle.
+
+- External child process: its executable is not inside any `.app` bundle and it has no controlling terminal. An app's own helpers (Electron, WebKit, and similar) and interactive terminal jobs are never touched.
+- The cleanup unit is a child process group: an external process whose parent is not external, together with all of its descendants. Groups are cleaned as a whole; a single process inside a group is never killed on its own.
+- A group is cleaned only when every process in it has been idle for 30 minutes (less than 3 seconds of CPU time growth) and the group uses at least 100 MB in total. Idle time is measured from GreenRAM's launch.
+- Children of the frontmost app are kept. The whitelist only protects apps from being quit; it does not affect child process cleanup.
+- GreenRAM sends SIGTERM, then SIGKILL to processes still running 5 seconds later. Each group is attempted once.
+- Recent Events records every cleaned group: owning app, process count, memory, idle time, and each process's command name and PID.
+- On the main window's "All Apps" page, expand an app to see its child processes merged by command name, with count, memory, and how many idle ones will be cleaned.
+
+For example, a Claude Code stdio MCP server restarts automatically the next time the session calls that tool.
 
 ## Never Quit Rules
 

@@ -81,9 +81,9 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                minimumBackgroundDurationsByBundleID: ["test.protected": 10 * 60],
+                minimumBackgroundDurationsByBundleID: ["test.protected": TimeInterval(10 * 60)],
                 autoQuitBundleIDs: ["test.protected"],
-                memoryLimitsByBundleID: ["test.protected": 512 * 1024 * 1024],
+                memoryLimitsByBundleID: ["test.protected": UInt64(512 * 1024 * 1024)],
                 isMemoryLimitExceeded: true
             ),
             terminator: TerminatorSpy(),
@@ -178,8 +178,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.short": 10 * 60,
-                    "test.long": 60 * 60
+                    "test.short": TimeInterval(10 * 60),
+                    "test.long": TimeInterval(60 * 60)
                 ],
                 autoQuitBundleIDs: ["test.short", "test.long"]
             ),
@@ -228,8 +228,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.ordinary": 10 * 60,
-                    "test.auto-short": 10 * 60
+                    "test.ordinary": TimeInterval(10 * 60),
+                    "test.auto-short": TimeInterval(10 * 60)
                 ],
                 autoQuitBundleIDs: ["test.auto-short"]
             ),
@@ -240,8 +240,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
                 minimumBackgroundDurationsByBundleID: [
-                    "test.ordinary": 10 * 60,
-                    "test.auto-short": 10 * 60
+                    "test.ordinary": TimeInterval(10 * 60),
+                    "test.auto-short": TimeInterval(10 * 60)
                 ],
                 autoQuitBundleIDs: ["test.auto-short"],
                 isMemoryLimitExceeded: true
@@ -278,7 +278,7 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                memoryLimitsByBundleID: ["test.memory": 1_024 * 1024 * 1024]
+                memoryLimitsByBundleID: ["test.memory": UInt64(1_024 * 1024 * 1024)]
             ),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
@@ -300,8 +300,8 @@ final class MemoryPolicyEngineTests: XCTestCase {
         let engine = MemoryPolicyEngine(
             configuration: MemoryPolicyConfiguration(
                 minimumBackgroundDuration: 30 * 60,
-                minimumBackgroundDurationsByBundleID: ["test.short-memory": 10 * 60],
-                memoryLimitsByBundleID: ["test.short-memory": 1_024 * 1024 * 1024]
+                minimumBackgroundDurationsByBundleID: ["test.short-memory": TimeInterval(10 * 60)],
+                memoryLimitsByBundleID: ["test.short-memory": UInt64(1_024 * 1024 * 1024)]
             ),
             terminator: TerminatorSpy(),
             logger: LoggerSpy()
@@ -368,6 +368,22 @@ final class MemoryPolicyEngineTests: XCTestCase {
         engine.handleAutomaticRelease(states: [reusedPIDApp], now: now.addingTimeInterval(60))
 
         XCTAssertEqual(terminator.forceQuitApps.map(\.bundleID), ["test.original", "test.reused-pid"])
+    }
+
+    func testCleanupStatusReflectsProtectionForegroundAndCandidates() {
+        let now = Date()
+        let engine = makeEngine(autoQuitBundleIDs: ["test.cleanable", "test.waiting"])
+        let protected = makeApp(bundleID: "test.cleanable-pinned", name: "Pinned", lastBackgroundAt: now.addingTimeInterval(-60 * 60), isWhitelisted: true)
+        let foreground = makeApp(bundleID: "test.front", name: "Front", lastBackgroundAt: nil, isFrontmost: true)
+        let cleanable = makeApp(bundleID: "test.cleanable", name: "Cleanable", lastBackgroundAt: now.addingTimeInterval(-31 * 60))
+        let waiting = makeApp(bundleID: "test.waiting", name: "Waiting", lastBackgroundAt: now.addingTimeInterval(-5 * 60))
+        let own = makeApp(bundleID: AppIdentity.bundleIdentifier, name: "GreenRAM", lastBackgroundAt: now.addingTimeInterval(-60 * 60))
+
+        XCTAssertEqual(engine.cleanupStatus(protected, now: now), .protected)
+        XCTAssertEqual(engine.cleanupStatus(foreground, now: now), .foreground)
+        XCTAssertEqual(engine.cleanupStatus(cleanable, now: now), .cleanable)
+        XCTAssertEqual(engine.cleanupStatus(waiting, now: now), .waiting)
+        XCTAssertEqual(engine.cleanupStatus(own, now: now), .protected)
     }
 
     private func makeEngine(

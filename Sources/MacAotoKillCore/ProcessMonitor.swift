@@ -5,6 +5,7 @@ import Foundation
 public final class ProcessMonitor {
     private let whitelistStore: WhitelistStore
     private let foregroundTracker: ForegroundTracker
+    public private(set) var lastProcessTree = ProcessTreeSnapshot(entries: [])
 
     public init(
         whitelistStore: WhitelistStore,
@@ -17,6 +18,7 @@ public final class ProcessMonitor {
     public func sample() -> [AppRuntimeState] {
         let frontmostPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
         let processTree = ProcessTreeSnapshot.capture()
+        lastProcessTree = processTree
 
         return NSWorkspace.shared.runningApplications
             .compactMap { app -> AppRuntimeState? in

@@ -2,190 +2,144 @@ import AppKit
 import MacAotoKillCore
 import SwiftUI
 
-struct MemoryMetricDisplay {
+/// RAM / Swap 指标的展示数据。填充色表达严重程度：正常 → 接近上限 → 超限。
+struct MemoryMetric {
     let title: String
     let systemImage: String
     let value: String
+    let total: String
     let detail: String
     let progress: Double
-    let isExceeded: Bool
-}
-
-enum MemoryMetricDisplays {
-    static func ram(
-        snapshot: SystemMemorySnapshot,
-        ramLimitPercent: Double,
-        localizer: Localizer
-    ) -> MemoryMetricDisplay {
-        MemoryMetricDisplay(
-            title: localizer.t("settings.ramUsed"),
-            systemImage: "memorychip",
-            value: "\(ByteFormatter.memory(snapshot.usedPhysicalBytes)) / \(ByteFormatter.memory(snapshot.totalPhysicalBytes))",
-            detail: PercentFormatter.compact(snapshot.usedPhysicalPercent),
-            progress: snapshot.usedPhysicalPercent / 100,
-            isExceeded: snapshot.usedPhysicalPercent >= ramLimitPercent
-        )
-    }
-
-    static func swap(
-        snapshot: SystemMemorySnapshot,
-        swapLimitEnabled: Bool,
-        swapLimitBytes: UInt64,
-        localizer: Localizer
-    ) -> MemoryMetricDisplay {
-        let denominator = swapLimitEnabled ? swapLimitBytes : snapshot.swapTotalBytes
-
-        return MemoryMetricDisplay(
-            title: localizer.t("settings.swapUsed"),
-            systemImage: "arrow.triangle.2.circlepath",
-            value: "\(ByteFormatter.memory(snapshot.swapUsedBytes)) / \(ByteFormatter.memory(snapshot.swapTotalBytes))",
-            detail: swapLimitEnabled
-                ? "\(localizer.t("settings.swapLimit")) \(ByteFormatter.memory(swapLimitBytes))"
-                : localizer.t("settings.swapMinimumHint"),
-            progress: progress(Double(snapshot.swapUsedBytes), total: Double(denominator)),
-            isExceeded: swapLimitEnabled && snapshot.swapUsedBytes >= swapLimitBytes
-        )
-    }
-
-    private static func progress(_ value: Double, total: Double) -> Double {
-        guard total > 0 else { return 0 }
-        return min(max(value / total, 0), 1)
-    }
-}
-
-struct MemoryMetricSummaryView: View {
-    let metric: MemoryMetricDisplay
-    var ringSize: CGFloat = 58
-    var iconSize: CGFloat = 18
-    var minHeight: CGFloat = 82
-
-    private var color: Color {
-        MemoryMetricColor.status(metric.isExceeded)
-    }
-
-    var body: some View {
-        HStack(spacing: 13) {
-            MemoryGaugeRing(progress: metric.progress, color: color)
-                .frame(width: ringSize, height: ringSize)
-                .overlay {
-                    Image(systemName: metric.systemImage)
-                        .font(.system(size: iconSize, weight: .semibold))
-                        .foregroundStyle(color)
-                }
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(metric.title)
-                    .font(.callout.weight(.semibold))
-                    .lineLimit(1)
-
-                Text(metric.value)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-
-                Text(metric.detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: minHeight)
-    }
-}
-
-struct MemoryDashboardMenuContent: View {
-    static let width: CGFloat = 392
-
-    let title: String
-    let statusText: String
-    let isExceeded: Bool
-    let icon: NSImage
-    let ramMetric: MemoryMetricDisplay
-    let swapMetric: MemoryMetricDisplay
-
-    private var statusColor: Color {
-        MemoryMetricColor.status(isExceeded)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            header
-            metricCard
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 10)
-        .padding(.bottom, 6)
-        .frame(width: Self.width, alignment: .topLeading)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Image(nsImage: icon)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 18, height: 18)
-
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.primary)
-
-            Spacer(minLength: 12)
-
-            if isExceeded {
-                Text(statusText)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(statusColor)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(statusColor.opacity(0.12), in: Capsule())
-                    .overlay {
-                        Capsule()
-                            .stroke(statusColor.opacity(0.22), lineWidth: 1)
-                    }
-            }
-        }
-        .frame(width: Self.width - 32, height: 24, alignment: .center)
-    }
-
-    private var metricCard: some View {
-        VStack(spacing: 0) {
-            MemoryMetricSummaryView(metric: ramMetric, ringSize: 46, iconSize: 15, minHeight: 60)
-            Divider()
-                .padding(.leading, 65)
-            MemoryMetricSummaryView(metric: swapMetric, ringSize: 46, iconSize: 15, minHeight: 60)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 2)
-        .frame(width: Self.width - 32, alignment: .leading)
-    }
-}
-
-enum MemoryMetricColor {
-    static func status(_ isExceeded: Bool) -> Color {
-        Color(nsColor: isExceeded ? .systemRed : .systemGreen)
-    }
-}
-
-private struct MemoryGaugeRing: View {
-    let progress: Double
     let color: Color
+}
+
+enum MemoryMetrics {
+    static func ram(_ state: DashboardState) -> MemoryMetric {
+        let memory = state.memory
+        let localizer = state.localizer
+        let isExceeded = memory.usedPhysicalPercent >= state.ramLimitPercent
+        return MemoryMetric(
+            title: localizer.t("menu.ram"),
+            systemImage: "memorychip",
+            value: ByteFormatter.memory(memory.usedPhysicalBytes),
+            total: ByteFormatter.memory(memory.totalPhysicalBytes),
+            detail: localizer.t("overview.ramUsedPercent", PercentFormatter.compact(memory.usedPhysicalPercent)),
+            progress: memory.usedPhysicalPercent / 100,
+            color: isExceeded ? Palette.critical : Palette.brand
+        )
+    }
+
+    static func swap(_ state: DashboardState) -> MemoryMetric {
+        let memory = state.memory
+        let localizer = state.localizer
+        let denominator = state.swapLimitEnabled ? state.swapLimitBytes : memory.swapTotalBytes
+        let progress = denominator > 0 ? min(Double(memory.swapUsedBytes) / Double(denominator), 1) : 0
+        let color: Color
+        if state.swapLimitEnabled && memory.swapUsedBytes >= state.swapLimitBytes {
+            color = Palette.critical
+        } else if state.swapLimitEnabled && progress >= 0.75 {
+            color = Palette.warning
+        } else {
+            color = Palette.brand
+        }
+        return MemoryMetric(
+            title: localizer.t("menu.swap"),
+            systemImage: "arrow.triangle.2.circlepath",
+            value: ByteFormatter.memory(memory.swapUsedBytes),
+            total: state.swapLimitEnabled
+                ? ByteFormatter.memory(state.swapLimitBytes)
+                : ByteFormatter.memory(memory.swapTotalBytes),
+            detail: state.swapLimitEnabled
+                ? "\(localizer.t("settings.swapLimit")) \(ByteFormatter.memory(state.swapLimitBytes))"
+                : localizer.t("overview.swapLimitOff"),
+            progress: progress,
+            color: color
+        )
+    }
+}
+
+// MARK: - 内存构成
+
+struct MemorySegment: Identifiable {
+    let id: String
+    let title: String
+    let bytes: UInt64
+    let color: Color
+}
+
+enum MemoryComposition {
+    /// 固定顺序：App 内存、联动内存、已压缩、缓存文件，最后是剩余可用。
+    static func segments(_ memory: SystemMemorySnapshot, localizer: Localizer) -> [MemorySegment] {
+        let used = [
+            MemorySegment(id: "app", title: localizer.t("composition.app"), bytes: memory.appMemoryBytes, color: Palette.appMemory),
+            MemorySegment(id: "wired", title: localizer.t("composition.wired"), bytes: memory.wiredBytes, color: Palette.wired),
+            MemorySegment(id: "compressed", title: localizer.t("composition.compressed"), bytes: memory.compressedBytes, color: Palette.compressed),
+            MemorySegment(id: "cached", title: localizer.t("composition.cached"), bytes: memory.cachedFilesBytes, color: Palette.cachedFiles)
+        ]
+        let usedBytes = used.reduce(UInt64(0)) { $0 + $1.bytes }
+        let freeBytes = memory.totalPhysicalBytes > usedBytes ? memory.totalPhysicalBytes - usedBytes : 0
+        return used + [
+            MemorySegment(id: "free", title: localizer.t("composition.free"), bytes: freeBytes, color: Palette.neutralFill)
+        ]
+    }
+}
+
+/// 堆叠条：段之间留 2pt 间隙，不描边。
+struct MemoryCompositionBar: View {
+    let segments: [MemorySegment]
+    var height: CGFloat = 14
 
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(color.opacity(0.18), lineWidth: 8)
-            Circle()
-                .trim(from: 0, to: min(max(progress, 0), 1))
-                .stroke(
-                    color,
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
+        let visible = segments.filter { $0.bytes > 0 }
+        let total = Double(visible.reduce(UInt64(0)) { $0 + $1.bytes })
+        GeometryReader { geometry in
+            let gaps = CGFloat(max(visible.count - 1, 0)) * 2
+            let available = max(geometry.size.width - gaps, 0)
+            HStack(spacing: 2) {
+                ForEach(visible) { segment in
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(segment.color)
+                        .frame(width: total > 0 ? available * CGFloat(Double(segment.bytes) / total) : 0)
+                        .help("\(segment.title) · \(ByteFormatter.memory(segment.bytes))")
+                }
+            }
         }
+        .frame(height: height)
+    }
+}
+
+struct MemoryCompositionLegend: View {
+    let segments: [MemorySegment]
+    let totalBytes: UInt64
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(segments) { segment in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(segment.color)
+                            .frame(width: 10, height: 10)
+                        Text(segment.title)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Text(ByteFormatter.memory(segment.bytes))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .monospacedDigit()
+                    Text(share(segment.bytes))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func share(_ bytes: UInt64) -> String {
+        guard totalBytes > 0 else { return "0%" }
+        return PercentFormatter.compact(Double(bytes) / Double(totalBytes) * 100)
     }
 }
