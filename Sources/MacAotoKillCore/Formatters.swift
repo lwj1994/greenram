@@ -31,6 +31,24 @@ public enum DurationFormatter {
         }
         return localizer.t("duration.hoursBg", interval / 3600)
     }
+
+    /// 不带「后台」前缀的时长，例如「12 分钟」「1.5 小时」。
+    public static func plain(_ interval: TimeInterval, localizer: Localizer) -> String {
+        if interval < 60 {
+            return localizer.t("duration.seconds", Int(interval))
+        }
+        if interval < 60 * 60 {
+            return localizer.t("duration.minutes", Int(interval / 60))
+        }
+        return localizer.t("duration.hours", interval / 3600)
+    }
+
+    public static func idle(_ interval: TimeInterval, localizer: Localizer) -> String {
+        if interval < 60 * 60 {
+            return localizer.t("duration.idleMinutes", Int(interval / 60))
+        }
+        return localizer.t("duration.idleHours", interval / 3600)
+    }
 }
 
 public enum PercentFormatter {

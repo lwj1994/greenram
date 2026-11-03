@@ -3,12 +3,23 @@ import AppKit
 import MacAotoKillCore
 import SwiftUI
 
+enum SettingsPage {
+    case autoQuit
+    case idleTimes
+    case memoryLimits
+    case whitelist
+    case general
+}
+
+/// 主窗口里的规则页和设置页。
 @MainActor
 struct SettingsView: View {
     @WatchViewModel private var viewModel: SettingsViewModel
+    private let page: SettingsPage
 
-    init(viewModelSpec: ViewModelSpec<SettingsViewModel>) {
+    init(viewModelSpec: ViewModelSpec<SettingsViewModel>, page: SettingsPage) {
         self._viewModel = WatchViewModel(viewModelSpec)
+        self.page = page
     }
 
     private var state: SettingsState {
@@ -20,24 +31,33 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                memorySection
-                thresholdSection
-                rulesSummarySection
-                languageSection
-                updateSection
-                aboutSection
-                logSection
-                resetSection
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                pageHeader
+
+                switch page {
+                case .autoQuit:
+                    autoQuitSection
+                case .idleTimes:
+                    appIdleTimeSection
+                case .memoryLimits:
+                    appMemoryLimitSection
+                case .whitelist:
+                    whitelistSection
+                case .general:
+                    thresholdSection
+                    languageSection
+                    updateSection
+                    aboutSection
+                    logSection
+                    resetSection
+                }
             }
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .background(Color(nsColor: .windowBackgroundColor))
-            .navigationTitle(localizer.t("settings.title"))
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
         }
-        .frame(minWidth: 700, minHeight: 580)
         .onAppear {
+            viewModel.load()
             viewModel.refreshMemory()
         }
         .alert(localizer.t("settings.resetConfirmTitle"), isPresented: resetConfirmationBinding) {
@@ -55,119 +75,31 @@ struct SettingsView: View {
         }
     }
 
-    private var rulesPage: some View {
-        Form {
-            Section {
-                Text(localizer.t("settings.rulesPageHint"))
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.vertical, 4)
-            }
-
-            Section {
-                ruleNavigationRow(
-                    title: localizer.t("settings.autoQuitApps"),
-                    subtitle: localizer.t("settings.autoQuitAppsSummary", state.autoQuitItems.count),
-                    systemImage: "power.circle",
-                    color: Color(nsColor: .systemRed),
-                    destination: autoQuitRulesPage
-                )
-
-                ruleNavigationRow(
-                    title: localizer.t("settings.appIdleTimes"),
-                    subtitle: localizer.t("settings.appIdleTimesSummary", state.appIdleTimeItems.count),
-                    systemImage: "timer",
-                    color: Color(nsColor: .systemOrange),
-                    destination: appIdleTimeRulesPage
-                )
-
-                ruleNavigationRow(
-                    title: localizer.t("settings.appMemoryLimits"),
-                    subtitle: localizer.t("settings.appMemoryLimitsSummary", state.appMemoryLimitItems.count),
-                    systemImage: "memorychip",
-                    color: Color(nsColor: .systemBlue),
-                    destination: appMemoryLimitRulesPage
-                )
-
-                ruleNavigationRow(
-                    title: localizer.t("menu.whitelist"),
-                    subtitle: localizer.t("settings.whitelistSummary", state.whitelistItems.count),
-                    systemImage: "checkmark.shield",
-                    color: Color(nsColor: .systemGreen),
-                    destination: whitelistRulesPage
-                )
-            } header: {
-                sectionHeader(localizer.t("settings.rules"), systemImage: "slider.horizontal.3")
-            }
-        }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .frame(minWidth: 700, minHeight: 580)
-        .navigationTitle(localizer.t("settings.rules"))
-    }
-
-    private var autoQuitRulesPage: some View {
-        rulesDetailPage(title: localizer.t("settings.autoQuitApps")) {
-            autoQuitSection
-        }
-    }
-
-    private var appIdleTimeRulesPage: some View {
-        rulesDetailPage(title: localizer.t("settings.appIdleTimes")) {
-            appIdleTimeSection
-        }
-    }
-
-    private var appMemoryLimitRulesPage: some View {
-        rulesDetailPage(title: localizer.t("settings.appMemoryLimits")) {
-            appMemoryLimitSection
-        }
-    }
-
-    private var whitelistRulesPage: some View {
-        rulesDetailPage(title: localizer.t("menu.whitelist")) {
-            whitelistSection
-        }
-    }
-
-    private var memorySection: some View {
-        Section {
-            HStack(spacing: 18) {
-                MemoryMetricSummaryView(
-                    metric: MemoryMetricDisplays.ram(
-                        snapshot: state.memorySnapshot,
-                        ramLimitPercent: state.ramLimitPercent,
-                        localizer: localizer
-                    )
-                )
-
-                Divider()
-
-                MemoryMetricSummaryView(
-                    metric: MemoryMetricDisplays.swap(
-                        snapshot: state.memorySnapshot,
-                        swapLimitEnabled: state.swapLimitEnabled,
-                        swapLimitBytes: swapLimitBytes,
-                        localizer: localizer
-                    )
-                )
-            }
-            .padding(.vertical, 6)
-        } header: {
-            sectionHeader(localizer.t("settings.currentMemory"), systemImage: "memorychip")
+    @ViewBuilder
+    private var pageHeader: some View {
+        switch page {
+        case .autoQuit:
+            PageHeader(title: localizer.t("settings.autoQuitApps"), subtitle: localizer.t("settings.autoQuitAppsHint"))
+        case .idleTimes:
+            PageHeader(title: localizer.t("settings.appIdleTimes"), subtitle: localizer.t("settings.appIdleTimesHint"))
+        case .memoryLimits:
+            PageHeader(title: localizer.t("settings.appMemoryLimits"), subtitle: localizer.t("settings.appMemoryLimitsHint"))
+        case .whitelist:
+            PageHeader(title: localizer.t("menu.whitelist"), subtitle: localizer.t("settings.whitelistHint"))
+        case .general:
+            PageHeader(title: localizer.t("sidebar.settings"), subtitle: nil)
         }
     }
 
     private var thresholdSection: some View {
-        Section {
+        settingsSection(localizer.t("settings.releaseThresholds"), systemImage: "gauge") {
             toggleRow(
                 title: localizer.t("settings.swapLimitEnabled"),
                 isOn: swapLimitEnabledBinding
             )
 
             if state.swapLimitEnabled {
+                rowDivider
                 valueRow(
                     title: localizer.t("settings.swapLimit"),
                     value: swapLimitGBBinding,
@@ -175,10 +107,10 @@ struct SettingsView: View {
                     suffix: "GB",
                     isExceeded: isSwapExceeded
                 )
-
                 hintRow(localizer.t("settings.swapMinimumHint"))
             }
 
+            rowDivider
             valueRow(
                 title: localizer.t("settings.defaultBackgroundTime"),
                 value: minimumBackgroundMinutesBinding,
@@ -186,44 +118,11 @@ struct SettingsView: View {
                 suffix: "min",
                 isExceeded: false
             )
-        } header: {
-            sectionHeader(localizer.t("settings.releaseThresholds"), systemImage: "gauge")
-        }
-    }
-
-    private var rulesSummarySection: some View {
-        Section {
-            NavigationLink {
-                rulesPage
-            } label: {
-                HStack(spacing: 12) {
-                    glassIcon("slider.horizontal.3", color: Color(nsColor: .systemPurple))
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(localizer.t("settings.manageRules"))
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(.primary)
-
-                        Text(localizer.t("settings.rulesSummary", state.autoQuitItems.count, state.appIdleTimeItems.count, state.appMemoryLimitItems.count, state.whitelistItems.count))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-                }
-                .padding(.vertical, 5)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        } header: {
-            sectionHeader(localizer.t("settings.rules"), systemImage: "slider.horizontal.3")
         }
     }
 
     private var autoQuitSection: some View {
-        Section {
-            hintRow(localizer.t("settings.autoQuitAppsHint"))
-
+        settingsSection(nil, systemImage: nil) {
             addBundleIDRow(
                 text: newAutoQuitBundleIDBinding,
                 canAdd: viewModel.canAddAutoQuitBundleID,
@@ -232,21 +131,19 @@ struct SettingsView: View {
             )
 
             if state.autoQuitItems.isEmpty {
+                rowDivider
                 emptyRow(localizer.t("settings.noAutoQuitItems"))
             } else {
                 ForEach(state.autoQuitItems) { item in
+                    rowDivider
                     autoQuitRow(item)
                 }
             }
-        } header: {
-            sectionHeader(localizer.t("settings.autoQuitApps"), systemImage: "power.circle")
         }
     }
 
     private var appIdleTimeSection: some View {
-        Section {
-            hintRow(localizer.t("settings.appIdleTimesHint"))
-
+        settingsSection(nil, systemImage: nil) {
             addBundleIDRow(
                 text: newIdleTimeBundleIDBinding,
                 canAdd: viewModel.canAddIdleTimeBundleID,
@@ -255,21 +152,19 @@ struct SettingsView: View {
             )
 
             if state.appIdleTimeItems.isEmpty {
+                rowDivider
                 emptyRow(localizer.t("settings.noAppIdleTimeItems"))
             } else {
                 ForEach(state.appIdleTimeItems) { item in
+                    rowDivider
                     appIdleTimeRow(item)
                 }
             }
-        } header: {
-            sectionHeader(localizer.t("settings.appIdleTimes"), systemImage: "timer")
         }
     }
 
     private var appMemoryLimitSection: some View {
-        Section {
-            hintRow(localizer.t("settings.appMemoryLimitsHint"))
-
+        settingsSection(nil, systemImage: nil) {
             addBundleIDRow(
                 text: newMemoryLimitBundleIDBinding,
                 canAdd: viewModel.canAddMemoryLimitBundleID,
@@ -278,65 +173,19 @@ struct SettingsView: View {
             )
 
             if state.appMemoryLimitItems.isEmpty {
+                rowDivider
                 emptyRow(localizer.t("settings.noAppMemoryLimitItems"))
             } else {
                 ForEach(state.appMemoryLimitItems) { item in
+                    rowDivider
                     appMemoryLimitRow(item)
                 }
             }
-        } header: {
-            sectionHeader(localizer.t("settings.appMemoryLimits"), systemImage: "memorychip")
-        }
-    }
-
-    private var languageSection: some View {
-        Section {
-            LabeledContent {
-                Picker("", selection: languageCodeBinding) {
-                    ForEach(AppLanguage.allCases, id: \.storageCode) { language in
-                        Text(language.nativeDisplayName).tag(language.storageCode)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(maxWidth: 260, alignment: .trailing)
-            } label: {
-                Text(localizer.t("settings.language"))
-            }
-        } header: {
-            sectionHeader(localizer.t("settings.language"), systemImage: "globe")
-        }
-    }
-
-    private var updateSection: some View {
-        Section {
-            toggleRow(
-                title: localizer.t("settings.automaticUpdateReminder"),
-                isOn: automaticUpdateReminderEnabledBinding
-            )
-
-            hintRow(localizer.t("settings.automaticUpdateReminderHint"))
-        } header: {
-            sectionHeader(localizer.t("settings.updates"), systemImage: "arrow.down.circle")
-        }
-    }
-
-    private var aboutSection: some View {
-        Section {
-            LabeledContent {
-                Text(state.appVersion)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.secondary)
-            } label: {
-                Text(localizer.t("settings.version"))
-            }
-        } header: {
-            sectionHeader(localizer.t("settings.about"), systemImage: "info.circle")
         }
     }
 
     private var whitelistSection: some View {
-        Section {
+        settingsSection(nil, systemImage: nil) {
             addBundleIDRow(
                 text: newWhitelistBundleIDBinding,
                 canAdd: viewModel.canAddWhitelistBundleID,
@@ -345,19 +194,66 @@ struct SettingsView: View {
             )
 
             if state.whitelistItems.isEmpty {
+                rowDivider
                 emptyRow(localizer.t("menu.noWhitelistItems"))
             } else {
                 ForEach(state.whitelistItems) { item in
+                    rowDivider
                     whitelistRow(item)
                 }
             }
-        } header: {
-            sectionHeader(localizer.t("menu.whitelist"), systemImage: "checkmark.shield")
+        }
+    }
+
+    private var languageSection: some View {
+        settingsSection(localizer.t("settings.language"), systemImage: "globe") {
+            HStack {
+                Text(localizer.t("settings.language"))
+                Spacer()
+                Picker("", selection: languageCodeBinding) {
+                    ForEach(AppLanguage.allCases, id: \.storageCode) { language in
+                        Text(language.nativeDisplayName).tag(language.storageCode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+            }
+            .settingsRowPadding()
+        }
+    }
+
+    private var updateSection: some View {
+        settingsSection(localizer.t("settings.updates"), systemImage: "arrow.down.circle") {
+            toggleRow(
+                title: localizer.t("settings.automaticUpdateReminder"),
+                isOn: automaticUpdateReminderEnabledBinding
+            )
+            hintRow(localizer.t("settings.automaticUpdateReminderHint"))
+
+            rowDivider
+            actionRow(
+                title: localizer.t("settings.version"),
+                detail: state.appVersion,
+                buttonTitle: localizer.t("menu.checkForUpdates"),
+                action: viewModel.checkForUpdates
+            )
+        }
+    }
+
+    private var aboutSection: some View {
+        settingsSection(localizer.t("settings.about"), systemImage: "info.circle") {
+            actionRow(
+                title: localizer.t("settings.onboarding"),
+                detail: localizer.t("settings.onboardingHint"),
+                buttonTitle: localizer.t("settings.showOnboarding"),
+                action: viewModel.showOnboarding
+            )
         }
     }
 
     private var logSection: some View {
-        Section {
+        settingsSection(localizer.t("settings.logs"), systemImage: "doc.text") {
             HStack(spacing: 16) {
                 Text(localizer.t("settings.logRetentionHint"))
                     .font(.callout)
@@ -371,32 +267,21 @@ struct SettingsView: View {
                 } label: {
                     Label(localizer.t("settings.exportLogs"), systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(SettingsGlassButtonStyle(tint: Color(nsColor: .systemGray), isProminent: false))
             }
-            .padding(.vertical, 4)
-        } header: {
-            sectionHeader(localizer.t("settings.logs"), systemImage: "doc.text")
+            .settingsRowPadding()
         }
     }
 
     private var resetSection: some View {
-        Section {
-            HStack {
-                Spacer()
+        HStack {
+            Spacer()
 
-                Button {
-                    viewModel.setResetConfirmationPresented(true)
-                } label: {
-                    Label(localizer.t("settings.resetDefaults"), systemImage: "arrow.counterclockwise")
-                }
-                .buttonStyle(SettingsGlassButtonStyle(tint: Color(nsColor: .systemRed), isProminent: false))
+            Button(role: .destructive) {
+                viewModel.setResetConfirmationPresented(true)
+            } label: {
+                Label(localizer.t("settings.resetDefaults"), systemImage: "arrow.counterclockwise")
             }
-            .padding(.vertical, 4)
         }
-    }
-
-    private var isRamExceeded: Bool {
-        state.memorySnapshot.usedPhysicalPercent >= state.ramLimitPercent
     }
 
     private var isSwapExceeded: Bool {
@@ -529,21 +414,58 @@ struct SettingsView: View {
         )
     }
 
-    private func sectionHeader(_ title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.headline)
-            .foregroundStyle(.secondary)
+    private func settingsSection<Content: View>(
+        _ title: String?,
+        systemImage: String?,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let title, let systemImage {
+                Label(title, systemImage: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                content()
+            }
+            .card(padding: 0)
+        }
+    }
+
+    private var rowDivider: some View {
+        Divider()
+            .padding(.leading, 16)
     }
 
     private func toggleRow(title: String, isOn: Binding<Bool>) -> some View {
-        LabeledContent {
+        HStack {
+            Text(title)
+            Spacer()
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .toggleStyle(.switch)
-        } label: {
-            Text(title)
         }
-        .padding(.vertical, 2)
+        .settingsRowPadding()
+    }
+
+    private func actionRow(
+        title: String,
+        detail: String,
+        buttonTitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button(buttonTitle, action: action)
+        }
+        .settingsRowPadding()
     }
 
     private func valueRow(
@@ -553,26 +475,27 @@ struct SettingsView: View {
         suffix: String,
         isExceeded: Bool
     ) -> some View {
-        LabeledContent {
-            HStack(spacing: 10) {
-                Slider(value: value, in: range)
-                    .tint(statusColor(isExceeded))
-                    .frame(minWidth: 220, maxWidth: 340)
-
-                TextField("", value: value, format: .number.precision(.fractionLength(0...1)))
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 76)
-
-                Text(suffix)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30, alignment: .leading)
-            }
-        } label: {
+        HStack(spacing: 10) {
             Text(title)
+
+            Spacer(minLength: 16)
+
+            Slider(value: value, in: range)
+                .tint(statusColor(isExceeded))
+                .frame(minWidth: 200, maxWidth: 320)
+
+            TextField("", value: value, format: .number.precision(.fractionLength(0...1)))
+                .labelsHidden()
+                .multilineTextAlignment(.trailing)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 76)
+
+            Text(suffix)
+                .foregroundStyle(.secondary)
+                .frame(width: 30, alignment: .leading)
         }
-        .padding(.vertical, 2)
+        .settingsRowPadding()
     }
 
     private func hintRow(_ text: String) -> some View {
@@ -580,59 +503,16 @@ struct SettingsView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 16)
+            .padding(.top, -4)
+            .padding(.bottom, 12)
     }
 
     private func emptyRow(_ text: String) -> some View {
         Text(text)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 4)
-    }
-
-    private func ruleNavigationRow<Destination: View>(
-        title: String,
-        subtitle: String,
-        systemImage: String,
-        color: Color,
-        destination: Destination
-    ) -> some View {
-        NavigationLink {
-            destination
-        } label: {
-            HStack(spacing: 12) {
-                glassIcon(systemImage, color: color)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
-
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, 5)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func rulesDetailPage<Content: View>(
-        title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        Form {
-            content()
-        }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .frame(minWidth: 700, minHeight: 580)
-        .navigationTitle(title)
+            .settingsRowPadding()
     }
 
     private func addBundleIDRow(
@@ -645,9 +525,9 @@ struct SettingsView: View {
             Button(action: chooseAction) {
                 Label(localizer.t("settings.chooseApp"), systemImage: "folder")
             }
-            .buttonStyle(SettingsGlassButtonStyle(tint: Color(nsColor: .systemBlue), isProminent: false))
 
-            TextField(localizer.t("settings.bundleIDPlaceholder"), text: text)
+            TextField("", text: text, prompt: Text(localizer.t("settings.bundleIDPlaceholder")))
+                .labelsHidden()
                 .textFieldStyle(.roundedBorder)
                 .font(.system(.body, design: .monospaced))
                 .onSubmit(addAction)
@@ -655,10 +535,11 @@ struct SettingsView: View {
             Button(action: addAction) {
                 Label(localizer.t("settings.addBundleID"), systemImage: "plus")
             }
-            .buttonStyle(SettingsGlassButtonStyle(tint: Color(nsColor: .systemGreen), isProminent: true))
+            .buttonStyle(.borderedProminent)
+            .tint(Palette.brand)
             .disabled(!canAdd)
         }
-        .padding(.vertical, 3)
+        .settingsRowPadding()
     }
 
     private func autoQuitRow(_ item: AutoQuitAppInfo) -> some View {
@@ -684,7 +565,7 @@ struct SettingsView: View {
             }
             .help(localizer.t("settings.removeAutoQuitApp", item.bundleID))
         }
-        .padding(.vertical, 4)
+        .settingsRowPadding(vertical: 8)
     }
 
     private func appIdleTimeBinding(for bundleID: String) -> Binding<Double> {
@@ -731,7 +612,7 @@ struct SettingsView: View {
             }
             .help(localizer.t("settings.removeAppIdleTime", item.bundleID))
         }
-        .padding(.vertical, 4)
+        .settingsRowPadding(vertical: 8)
     }
 
     private func appMemoryLimitBinding(for bundleID: String) -> Binding<Double> {
@@ -778,7 +659,7 @@ struct SettingsView: View {
             }
             .help(localizer.t("settings.removeAppMemoryLimit", item.bundleID))
         }
-        .padding(.vertical, 4)
+        .settingsRowPadding(vertical: 8)
     }
 
     private func whitelistRow(_ item: WhitelistAppInfo) -> some View {
@@ -813,73 +694,32 @@ struct SettingsView: View {
             }
             .help(localizer.t("menu.removeBundleID", item.bundleID))
         }
-        .padding(.vertical, 4)
+        .settingsRowPadding(vertical: 8)
     }
 
     private func appIcon(_ icon: NSImage) -> some View {
         Image(nsImage: icon)
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 34, height: 34)
-            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-    }
-
-    private func glassIcon(_ systemImage: String, color: Color) -> some View {
-        Image(systemName: systemImage)
-            .font(.system(size: 17, weight: .semibold))
-            .foregroundStyle(color)
-            .frame(width: 34, height: 34)
-            .background {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.regularMaterial)
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(color.opacity(0.12))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(color.opacity(0.20), lineWidth: 1)
-            }
+            .frame(width: 32, height: 32)
     }
 
     private func removeButton(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: "trash")
+                .foregroundStyle(Palette.critical)
         }
-        .buttonStyle(SettingsGlassButtonStyle(tint: Color(nsColor: .systemRed), isProminent: false, isIconOnly: true))
+        .buttonStyle(.borderless)
     }
 
     private func statusColor(_ isExceeded: Bool) -> Color {
-        MemoryMetricColor.status(isExceeded)
+        isExceeded ? Palette.critical : Palette.brand
     }
 }
 
-private struct SettingsGlassButtonStyle: ButtonStyle {
-    let tint: Color
-    let isProminent: Bool
-    var isIconOnly = false
-
-    @Environment(\.isEnabled) private var isEnabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.body.weight(isProminent ? .semibold : .medium))
-            .foregroundStyle(isProminent ? tint : Color.primary)
-            .labelStyle(.titleAndIcon)
-            .frame(width: isIconOnly ? 32 : nil)
-            .frame(minHeight: 32)
-            .padding(.horizontal, isIconOnly ? 0 : 12)
-            .background {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.regularMaterial)
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(tint.opacity(isProminent ? 0.20 : 0.06))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(tint.opacity(isProminent ? 0.34 : 0.18), lineWidth: 1)
-            }
-            .opacity(isEnabled ? (configuration.isPressed ? 0.72 : 1) : 0.45)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+private extension View {
+    func settingsRowPadding(vertical: CGFloat = 11) -> some View {
+        padding(.horizontal, 16)
+            .padding(.vertical, vertical)
     }
 }

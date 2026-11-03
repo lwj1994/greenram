@@ -327,6 +327,22 @@ public struct Localizer: Equatable {
             .de: "%d Kindprozesse",
             .fr: "%d processus enfants"
         ],
+        "menu.childProcessCleanable": [
+            .en: "%d idle, will be cleaned",
+            .zhHans: "%d 个闲置待清理",
+            .zhHant: "%d 個閒置待清理",
+            .ja: "アイドル %d 個・終了予定",
+            .de: "%d inaktiv, wird beendet",
+            .fr: "%d inactifs, seront arrêtés"
+        ],
+        "menu.childProcessOthers": [
+            .en: "%d more processes · %@",
+            .zhHans: "其他 %d 个进程 · %@",
+            .zhHant: "其他 %d 個行程 · %@",
+            .ja: "ほか %d 個のプロセス · %@",
+            .de: "%d weitere Prozesse · %@",
+            .fr: "%d autres processus · %@"
+        ],
         "menu.cleanable": [
             .en: "Cleanable",
             .zhHans: "可清理",
@@ -713,8 +729,8 @@ public struct Localizer: Equatable {
         ],
         "settings.rulesSummary": [
             .en: "%d auto-quit apps · %d timeouts · %d memory limits · %d protected apps",
-            .zhHans: "%d 个自动退出 App · %d 个超时时间 · %d 个内存上限 · %d 个保护项",
-            .zhHant: "%d 個自動退出 App · %d 個逾時時間 · %d 個記憶體上限 · %d 個保護項",
+            .zhHans: "%d 个超时自动关闭 App · %d 个超时时间 · %d 个内存上限 · %d 个保护项",
+            .zhHant: "%d 個逾時自動關閉 App · %d 個逾時時間 · %d 個記憶體上限 · %d 個保護項",
             .ja: "自動終了アプリ %d 件 · タイムアウト %d 件 · メモリ上限 %d 件 · 保護中 %d 件",
             .de: "%d Auto-Beenden-Apps · %d Zeiten · %d Speicherlimits · %d geschützte Apps",
             .fr: "%d apps en auto-fermeture · %d delais · %d limites mémoire · %d apps protégées"
@@ -729,8 +745,8 @@ public struct Localizer: Equatable {
         ],
         "settings.autoQuitApps": [
             .en: "Auto-Quit Apps",
-            .zhHans: "自动退出 App",
-            .zhHant: "自動退出 App",
+            .zhHans: "超时自动关闭",
+            .zhHant: "逾時自動關閉",
             .ja: "自動終了するアプリ",
             .de: "Apps automatisch beenden",
             .fr: "Apps en auto-fermeture"
@@ -753,16 +769,16 @@ public struct Localizer: Equatable {
         ],
         "settings.noAutoQuitItems": [
             .en: "No auto-quit apps",
-            .zhHans: "没有自动退出 App",
-            .zhHant: "沒有自動退出 App",
+            .zhHans: "没有超时自动关闭的 App",
+            .zhHant: "沒有逾時自動關閉的 App",
             .ja: "自動終了アプリはありません",
             .de: "Keine Apps zum automatischen Beenden",
             .fr: "Aucune app en auto-fermeture"
         ],
         "settings.removeAutoQuitApp": [
             .en: "Remove %@ from Auto-Quit Apps",
-            .zhHans: "从自动退出 App 中移除 %@",
-            .zhHant: "從自動退出 App 中移除 %@",
+            .zhHans: "从超时自动关闭中移除 %@",
+            .zhHant: "從逾時自動關閉中移除 %@",
             .ja: "%@ を自動終了アプリから削除",
             .de: "%@ aus Auto-Beenden-Apps entfernen",
             .fr: "Retirer %@ des apps en auto-fermeture"
@@ -913,8 +929,8 @@ public struct Localizer: Equatable {
         ],
         "settings.resetConfirmMessage": [
             .en: "This restores cleanup limits and removes Auto-Quit Apps, app timeouts, and app memory limits. Language will stay unchanged.",
-            .zhHans: "这会恢复清理限制，并移除自动退出 App、单 App 超时时间和单 App 内存上限。语言设置不会改变。",
-            .zhHant: "這會恢復清理限制，並移除自動退出 App、單 App 逾時時間和單 App 記憶體上限。語言設定不會改變。",
+            .zhHans: "这会恢复清理限制，并移除超时自动关闭、单 App 超时时间和单 App 内存上限。语言设置不会改变。",
+            .zhHant: "這會恢復清理限制，並移除逾時自動關閉、單 App 逾時時間和單 App 記憶體上限。語言設定不會改變。",
             .ja: "整理の上限を既定値に戻し、自動終了アプリ、アプリ別時間、アプリ別メモリ上限を削除します。言語設定は変更されません。",
             .de: "Das setzt Bereinigungsgrenzen zurück und entfernt Auto-Beenden-Apps, App-Zeitlimits und App-Speicherlimits. Die Sprache bleibt unverändert.",
             .fr: "Les limites de nettoyage seront retablies, et les apps en auto-fermeture, délais par app et limites mémoire seront supprimés. La langue restera inchangée."
@@ -1046,6 +1062,22 @@ public struct Localizer: Equatable {
             .ja: "背景 %.1f時間",
             .de: "%.1f h im Hintergrund",
             .fr: "%.1f h arrière-plan"
+        ],
+        "duration.idleMinutes": [
+            .en: "idle %d min",
+            .zhHans: "闲置 %d 分钟",
+            .zhHant: "閒置 %d 分鐘",
+            .ja: "アイドル %d分",
+            .de: "%d min inaktiv",
+            .fr: "inactif %d min"
+        ],
+        "duration.idleHours": [
+            .en: "idle %.1f h",
+            .zhHans: "闲置 %.1f 小时",
+            .zhHant: "閒置 %.1f 小時",
+            .ja: "アイドル %.1f時間",
+            .de: "%.1f h inaktiv",
+            .fr: "inactif %.1f h"
         ],
         "event.started": [
             .en: "GreenRAM started.",
@@ -1279,6 +1311,22 @@ public struct Localizer: Equatable {
             .de: "Erzwungenes Beenden von %@ fehlgeschlagen.",
             .fr: "Échec de fermeture forcée pour %@."
         ],
+        "event.idleChildProcessesTerminated": [
+            .en: "Cleaned idle child processes of %@: %d processes, %@, %@ — %@",
+            .zhHans: "已清理 %@ 的闲置子进程：%d 个，%@，%@ — %@",
+            .zhHant: "已清理 %@ 的閒置子行程：%d 個，%@，%@ — %@",
+            .ja: "%@ のアイドル子プロセスを終了しました：%d 個、%@、%@ — %@",
+            .de: "Inaktive Kindprozesse von %@ beendet: %d Prozesse, %@, %@ — %@",
+            .fr: "Processus enfants inactifs de %@ arrêtés : %d processus, %@, %@ — %@"
+        ],
+        "event.idleChildProcessesTerminateFailed": [
+            .en: "Failed to clean idle child processes of %@: %@",
+            .zhHans: "清理 %@ 的闲置子进程失败：%@",
+            .zhHant: "清理 %@ 的閒置子行程失敗：%@",
+            .ja: "%@ のアイドル子プロセスの終了に失敗しました：%@",
+            .de: "Beenden inaktiver Kindprozesse von %@ fehlgeschlagen: %@",
+            .fr: "Échec de l’arrêt des processus enfants inactifs de %@ : %@"
+        ],
         "trigger.ramThreshold": [
             .en: "RAM %@ >= %@",
             .zhHans: "物理内存 %@ >= %@",
@@ -1294,6 +1342,758 @@ public struct Localizer: Equatable {
             .ja: "スワップ %@ >= %@",
             .de: "Auslagerung %@ >= %@",
             .fr: "Swap %@ >= %@"
+        ],
+        "sidebar.monitor": [
+            .en: "Monitor",
+            .zhHans: "监控",
+            .zhHant: "監控",
+            .ja: "モニタ",
+            .de: "Überwachung",
+            .fr: "Surveillance"
+        ],
+        "sidebar.overview": [
+            .en: "Overview",
+            .zhHans: "概览",
+            .zhHant: "概覽",
+            .ja: "概要",
+            .de: "Übersicht",
+            .fr: "Vue d’ensemble"
+        ],
+        "sidebar.settings": [
+            .en: "Settings",
+            .zhHans: "设置",
+            .zhHant: "設定",
+            .ja: "設定",
+            .de: "Einstellungen",
+            .fr: "Réglages"
+        ],
+        "status.foreground": [
+            .en: "Foreground",
+            .zhHans: "前台",
+            .zhHant: "前台",
+            .ja: "最前面",
+            .de: "Vordergrund",
+            .fr: "Premier plan"
+        ],
+        "status.monitoring": [
+            .en: "Monitoring",
+            .zhHans: "监控中",
+            .zhHant: "監控中",
+            .ja: "監視中",
+            .de: "Beobachtet",
+            .fr: "Surveillée"
+        ],
+        "overview.subtitle": [
+            .en: "%d apps · updated %@",
+            .zhHans: "%d 个 App · 更新于 %@",
+            .zhHant: "%d 個 App · 更新於 %@",
+            .ja: "%d 個のアプリ · %@ に更新",
+            .de: "%d Apps · aktualisiert um %@",
+            .fr: "%d apps · mis à jour à %@"
+        ],
+        "overview.ramUsedPercent": [
+            .en: "%@ in use",
+            .zhHans: "已使用 %@",
+            .zhHant: "已使用 %@",
+            .ja: "%@ 使用中",
+            .de: "%@ belegt",
+            .fr: "%@ utilisée"
+        ],
+        "overview.swapLimitOff": [
+            .en: "No Swap limit",
+            .zhHans: "未启用 Swap 限制",
+            .zhHant: "未啟用 Swap 限制",
+            .ja: "Swap 上限なし",
+            .de: "Kein Swap-Limit",
+            .fr: "Aucune limite de swap"
+        ],
+        "overview.noCleanableApps": [
+            .en: "Nothing to clean",
+            .zhHans: "暂无可清理 App",
+            .zhHant: "暫無可清理 App",
+            .ja: "クリーンアップ対象なし",
+            .de: "Nichts zu bereinigen",
+            .fr: "Rien à nettoyer"
+        ],
+        "overview.totalMemory": [
+            .en: "%@ in total",
+            .zhHans: "合计 %@",
+            .zhHant: "合計 %@",
+            .ja: "合計 %@",
+            .de: "Insgesamt %@",
+            .fr: "%@ au total"
+        ],
+        "overview.idleChildProcesses": [
+            .en: "Idle Process Groups",
+            .zhHans: "闲置子进程组",
+            .zhHant: "閒置子行程組",
+            .ja: "アイドル子プロセス群",
+            .de: "Inaktive Prozessgruppen",
+            .fr: "Groupes inactifs"
+        ],
+        "overview.noIdleChildProcesses": [
+            .en: "None idle",
+            .zhHans: "暂无闲置",
+            .zhHant: "暫無閒置",
+            .ja: "なし",
+            .de: "Keine inaktiv",
+            .fr: "Aucun inactif"
+        ],
+        "overview.composition": [
+            .en: "Memory Composition",
+            .zhHans: "内存构成",
+            .zhHant: "記憶體構成",
+            .ja: "メモリ構成",
+            .de: "Speicheraufteilung",
+            .fr: "Composition de la mémoire"
+        ],
+        "overview.compositionHint": [
+            .en: "%@ physical memory · same categories as Activity Monitor",
+            .zhHans: "共 %@ 物理内存 · 口径与活动监视器一致",
+            .zhHant: "共 %@ 實體記憶體 · 口徑與活動監視器一致",
+            .ja: "物理メモリ %@ · アクティビティモニタと同じ分類",
+            .de: "%@ physischer Speicher · Kategorien wie in der Aktivitätsanzeige",
+            .fr: "%@ de mémoire physique · mêmes catégories que le Moniteur d’activité"
+        ],
+        "overview.treemap": [
+            .en: "App Memory Map",
+            .zhHans: "App 内存平铺",
+            .zhHant: "App 記憶體平鋪",
+            .ja: "アプリのメモリマップ",
+            .de: "App-Speicherkarte",
+            .fr: "Carte mémoire des apps"
+        ],
+        "overview.treemapHint": [
+            .en: "%d apps · %@ · area = whole process tree incl. child processes · click a tile for details",
+            .zhHans: "%d 个 App · 合计 %@ · 面积为整个进程树（含子进程）· 点击查看详情",
+            .zhHant: "%d 個 App · 合計 %@ · 面積為整個行程樹（含子行程）· 點按查看詳情",
+            .ja: "%d 個のアプリ · 合計 %@ · 面積は子プロセスを含むプロセスツリー全体 · クリックで詳細",
+            .de: "%d Apps · %@ · Fläche = gesamter Prozessbaum inkl. Kindprozessen · Klicken für Details",
+            .fr: "%d apps · %@ · surface = arbre de processus complet, enfants compris · cliquez pour les détails"
+        ],
+        "overview.cleanNowHint": [
+            .en: "Force quit apps that currently meet the cleanup rules",
+            .zhHans: "强制退出当前符合清理条件的 App",
+            .zhHant: "強制退出目前符合清理條件的 App",
+            .ja: "現在クリーンアップ条件を満たすアプリを強制終了します",
+            .de: "Apps sofort beenden, die die Bereinigungsregeln erfüllen",
+            .fr: "Forcer à quitter les apps qui remplissent les règles de nettoyage"
+        ],
+        "composition.app": [
+            .en: "App Memory",
+            .zhHans: "App 内存",
+            .zhHant: "App 記憶體",
+            .ja: "アプリメモリ",
+            .de: "App-Speicher",
+            .fr: "Mémoire des apps"
+        ],
+        "composition.wired": [
+            .en: "Wired",
+            .zhHans: "联动内存",
+            .zhHant: "聯動記憶體",
+            .ja: "確保されているメモリ",
+            .de: "Fest belegt",
+            .fr: "Mémoire résidente"
+        ],
+        "composition.compressed": [
+            .en: "Compressed",
+            .zhHans: "已压缩",
+            .zhHant: "已壓縮",
+            .ja: "圧縮",
+            .de: "Komprimiert",
+            .fr: "Compressée"
+        ],
+        "composition.cached": [
+            .en: "Cached Files",
+            .zhHans: "缓存文件",
+            .zhHant: "快取檔案",
+            .ja: "キャッシュされたファイル",
+            .de: "Zwischengespeichert",
+            .fr: "Fichiers en cache"
+        ],
+        "composition.free": [
+            .en: "Free",
+            .zhHans: "可用",
+            .zhHant: "可用",
+            .ja: "空き",
+            .de: "Frei",
+            .fr: "Libre"
+        ],
+        "treemap.otherApps": [
+            .en: "%d other apps",
+            .zhHans: "其他 %d 个 App",
+            .zhHant: "其他 %d 個 App",
+            .ja: "その他 %d 個のアプリ",
+            .de: "%d weitere Apps",
+            .fr: "%d autres apps"
+        ],
+        "apps.subtitle": [
+            .en: "%d running apps · %@ in total, including child processes",
+            .zhHans: "%d 个运行中的 App · 合计 %@（含子进程）",
+            .zhHant: "%d 個執行中的 App · 合計 %@（含子行程）",
+            .ja: "実行中のアプリ %d 個 · 合計 %@（子プロセスを含む）",
+            .de: "%d laufende Apps · insgesamt %@ inkl. Kindprozessen",
+            .fr: "%d apps ouvertes · %@ au total, processus enfants compris"
+        ],
+        "apps.filterAll": [
+            .en: "All",
+            .zhHans: "全部",
+            .zhHant: "全部",
+            .ja: "すべて",
+            .de: "Alle",
+            .fr: "Toutes"
+        ],
+        "apps.filterAutoQuit": [
+            .en: "Auto-Quit",
+            .zhHans: "超时自动关闭",
+            .zhHant: "逾時自動關閉",
+            .ja: "自動終了",
+            .de: "Auto-Beenden",
+            .fr: "Auto-fermeture"
+        ],
+        "apps.search": [
+            .en: "Search apps",
+            .zhHans: "搜索 App",
+            .zhHant: "搜尋 App",
+            .ja: "アプリを検索",
+            .de: "Apps suchen",
+            .fr: "Rechercher des apps"
+        ],
+        "apps.empty": [
+            .en: "No matching apps",
+            .zhHans: "没有匹配的 App",
+            .zhHant: "沒有符合的 App",
+            .ja: "一致するアプリはありません",
+            .de: "Keine passenden Apps",
+            .fr: "Aucune app correspondante"
+        ],
+        "apps.addAutoQuit": [
+            .en: "Add to Auto-Quit Apps",
+            .zhHans: "加入超时自动关闭",
+            .zhHant: "加入逾時自動關閉",
+            .ja: "自動終了するアプリに追加",
+            .de: "Automatisch beenden",
+            .fr: "Ajouter à l’auto-fermeture"
+        ],
+        "apps.removeAutoQuit": [
+            .en: "Remove from Auto-Quit Apps",
+            .zhHans: "移出超时自动关闭",
+            .zhHant: "移出逾時自動關閉",
+            .ja: "自動終了するアプリから削除",
+            .de: "Nicht mehr automatisch beenden",
+            .fr: "Retirer de l’auto-fermeture"
+        ],
+        "apps.ownApp": [
+            .en: "GreenRAM itself, never cleaned",
+            .zhHans: "GreenRAM 自身，永不清理",
+            .zhHant: "GreenRAM 本身，永不清理",
+            .ja: "GreenRAM 自身（クリーンアップされません）",
+            .de: "GreenRAM selbst, wird nie bereinigt",
+            .fr: "GreenRAM lui-même, jamais nettoyé"
+        ],
+        "apps.backgroundProgress": [
+            .en: "Background %@ / threshold %@",
+            .zhHans: "后台 %@ / 阈值 %@",
+            .zhHant: "後台 %@ / 閾值 %@",
+            .ja: "バックグラウンド %@ / しきい値 %@",
+            .de: "Hintergrund %@ / Schwelle %@",
+            .fr: "Arrière-plan %@ / seuil %@"
+        ],
+        "apps.memoryLimit": [
+            .en: "Limit %@",
+            .zhHans: "上限 %@",
+            .zhHant: "上限 %@",
+            .ja: "上限 %@",
+            .de: "Limit %@",
+            .fr: "Limite %@"
+        ],
+        "apps.childProcesses": [
+            .en: "%d child processes · %@ in total",
+            .zhHans: "%d 个子进程 · 合计 %@",
+            .zhHant: "%d 個子行程 · 合計 %@",
+            .ja: "子プロセス %d 個 · 合計 %@",
+            .de: "%d Kindprozesse · insgesamt %@",
+            .fr: "%d processus enfants · %@ au total"
+        ],
+        "duration.seconds": [
+            .en: "%d s",
+            .zhHans: "%d 秒",
+            .zhHant: "%d 秒",
+            .ja: "%d 秒",
+            .de: "%d s",
+            .fr: "%d s"
+        ],
+        "duration.minutes": [
+            .en: "%d min",
+            .zhHans: "%d 分钟",
+            .zhHant: "%d 分鐘",
+            .ja: "%d 分",
+            .de: "%d Min.",
+            .fr: "%d min"
+        ],
+        "duration.hours": [
+            .en: "%.1f h",
+            .zhHans: "%.1f 小时",
+            .zhHant: "%.1f 小時",
+            .ja: "%.1f 時間",
+            .de: "%.1f Std.",
+            .fr: "%.1f h"
+        ],
+        "panel.openMainWindow": [
+            .en: "Open GreenRAM Window",
+            .zhHans: "打开 GreenRAM 主窗口",
+            .zhHant: "打開 GreenRAM 主視窗",
+            .ja: "GreenRAM のウインドウを開く",
+            .de: "GreenRAM-Fenster öffnen",
+            .fr: "Ouvrir la fenêtre GreenRAM"
+        ],
+        "panel.topApps": [
+            .en: "Top Memory",
+            .zhHans: "占用最高",
+            .zhHant: "佔用最高",
+            .ja: "メモリ使用量上位",
+            .de: "Größter Speicherbedarf",
+            .fr: "Plus gourmandes"
+        ],
+        "panel.allApps": [
+            .en: "All %d apps",
+            .zhHans: "全部 %d 个",
+            .zhHant: "全部 %d 個",
+            .ja: "全 %d 個",
+            .de: "Alle %d Apps",
+            .fr: "Les %d apps"
+        ],
+        "panel.summary": [
+            .en: "%d cleanable apps · %d idle child process groups",
+            .zhHans: "可清理 %d 个 App · 闲置子进程 %d 组",
+            .zhHant: "可清理 %d 個 App · 閒置子行程 %d 組",
+            .ja: "クリーンアップ可 %d 個 · アイドル子プロセス %d 群",
+            .de: "%d bereinigbare Apps · %d inaktive Prozessgruppen",
+            .fr: "%d apps nettoyables · %d groupes de processus inactifs"
+        ],
+        "settings.whitelistHint": [
+            .en: "Whitelisted apps are never quit. Finder, Dock and other system items are included by default and can be removed.",
+            .zhHans: "白名单 App 永不清理。Finder、Dock 等系统项默认在内，也可以移除。",
+            .zhHant: "白名單 App 永不清理。Finder、Dock 等系統項預設在內，也可以移除。",
+            .ja: "ホワイトリストのアプリは終了されません。Finder や Dock などのシステム項目は初期状態で含まれ、削除もできます。",
+            .de: "Apps auf der Whitelist werden nie beendet. Finder, Dock und andere Systemobjekte sind vorab eingetragen und lassen sich entfernen.",
+            .fr: "Les apps de la liste blanche ne sont jamais fermées. Finder, Dock et d’autres éléments système y figurent par défaut et peuvent être retirés."
+        ],
+        "settings.onboarding": [
+            .en: "Welcome Guide",
+            .zhHans: "引导页",
+            .zhHant: "引導頁",
+            .ja: "ようこそガイド",
+            .de: "Einführung",
+            .fr: "Guide de bienvenue"
+        ],
+        "settings.onboardingHint": [
+            .en: "How GreenRAM decides what to clean",
+            .zhHans: "介绍 GreenRAM 如何决定清理哪些 App",
+            .zhHant: "介紹 GreenRAM 如何決定清理哪些 App",
+            .ja: "GreenRAM がクリーンアップ対象を決める仕組み",
+            .de: "Wie GreenRAM entscheidet, was bereinigt wird",
+            .fr: "Comment GreenRAM choisit quoi nettoyer"
+        ],
+        "settings.showOnboarding": [
+            .en: "Show Again",
+            .zhHans: "再次显示",
+            .zhHant: "再次顯示",
+            .ja: "もう一度表示",
+            .de: "Erneut anzeigen",
+            .fr: "Afficher à nouveau"
+        ],
+        "mainMenu.about": [
+            .en: "About %@",
+            .zhHans: "关于 %@",
+            .zhHant: "關於 %@",
+            .ja: "%@ について",
+            .de: "Über %@",
+            .fr: "À propos de %@"
+        ],
+        "mainMenu.hide": [
+            .en: "Hide %@",
+            .zhHans: "隐藏 %@",
+            .zhHant: "隱藏 %@",
+            .ja: "%@ を非表示",
+            .de: "%@ ausblenden",
+            .fr: "Masquer %@"
+        ],
+        "mainMenu.hideOthers": [
+            .en: "Hide Others",
+            .zhHans: "隐藏其他",
+            .zhHant: "隱藏其他",
+            .ja: "ほかを非表示",
+            .de: "Andere ausblenden",
+            .fr: "Masquer les autres"
+        ],
+        "mainMenu.showAll": [
+            .en: "Show All",
+            .zhHans: "全部显示",
+            .zhHant: "顯示全部",
+            .ja: "すべてを表示",
+            .de: "Alle einblenden",
+            .fr: "Tout afficher"
+        ],
+        "mainMenu.quit": [
+            .en: "Quit %@",
+            .zhHans: "退出 %@",
+            .zhHant: "結束 %@",
+            .ja: "%@ を終了",
+            .de: "%@ beenden",
+            .fr: "Quitter %@"
+        ],
+        "mainMenu.edit": [
+            .en: "Edit",
+            .zhHans: "编辑",
+            .zhHant: "編輯",
+            .ja: "編集",
+            .de: "Bearbeiten",
+            .fr: "Édition"
+        ],
+        "mainMenu.undo": [
+            .en: "Undo",
+            .zhHans: "撤销",
+            .zhHant: "還原",
+            .ja: "取り消す",
+            .de: "Widerrufen",
+            .fr: "Annuler"
+        ],
+        "mainMenu.redo": [
+            .en: "Redo",
+            .zhHans: "重做",
+            .zhHant: "重做",
+            .ja: "やり直す",
+            .de: "Wiederholen",
+            .fr: "Rétablir"
+        ],
+        "mainMenu.cut": [
+            .en: "Cut",
+            .zhHans: "剪切",
+            .zhHant: "剪下",
+            .ja: "カット",
+            .de: "Ausschneiden",
+            .fr: "Couper"
+        ],
+        "mainMenu.copy": [
+            .en: "Copy",
+            .zhHans: "拷贝",
+            .zhHant: "拷貝",
+            .ja: "コピー",
+            .de: "Kopieren",
+            .fr: "Copier"
+        ],
+        "mainMenu.paste": [
+            .en: "Paste",
+            .zhHans: "粘贴",
+            .zhHant: "貼上",
+            .ja: "ペースト",
+            .de: "Einsetzen",
+            .fr: "Coller"
+        ],
+        "mainMenu.selectAll": [
+            .en: "Select All",
+            .zhHans: "全选",
+            .zhHant: "全選",
+            .ja: "すべてを選択",
+            .de: "Alles auswählen",
+            .fr: "Tout sélectionner"
+        ],
+        "mainMenu.window": [
+            .en: "Window",
+            .zhHans: "窗口",
+            .zhHant: "視窗",
+            .ja: "ウインドウ",
+            .de: "Fenster",
+            .fr: "Fenêtre"
+        ],
+        "mainMenu.mainWindow": [
+            .en: "GreenRAM Window",
+            .zhHans: "GreenRAM 主窗口",
+            .zhHant: "GreenRAM 主視窗",
+            .ja: "GreenRAM ウインドウ",
+            .de: "GreenRAM-Fenster",
+            .fr: "Fenêtre GreenRAM"
+        ],
+        "mainMenu.minimize": [
+            .en: "Minimize",
+            .zhHans: "最小化",
+            .zhHant: "縮到最小",
+            .ja: "しまう",
+            .de: "Im Dock ablegen",
+            .fr: "Placer dans le Dock"
+        ],
+        "mainMenu.zoom": [
+            .en: "Zoom",
+            .zhHans: "缩放",
+            .zhHant: "縮放",
+            .ja: "拡大/縮小",
+            .de: "Zoomen",
+            .fr: "Réduire/agrandir"
+        ],
+        "mainMenu.close": [
+            .en: "Close",
+            .zhHans: "关闭",
+            .zhHant: "關閉",
+            .ja: "閉じる",
+            .de: "Schließen",
+            .fr: "Fermer"
+        ],
+        "onboarding.back": [
+            .en: "Back",
+            .zhHans: "上一步",
+            .zhHant: "上一步",
+            .ja: "戻る",
+            .de: "Zurück",
+            .fr: "Retour"
+        ],
+        "onboarding.continue": [
+            .en: "Continue",
+            .zhHans: "继续",
+            .zhHant: "繼續",
+            .ja: "続ける",
+            .de: "Weiter",
+            .fr: "Continuer"
+        ],
+        "onboarding.start": [
+            .en: "Start Using GreenRAM",
+            .zhHans: "开始使用",
+            .zhHant: "開始使用",
+            .ja: "使い始める",
+            .de: "Loslegen",
+            .fr: "Commencer"
+        ],
+        "onboarding.welcomeTitle": [
+            .en: "Welcome to GreenRAM",
+            .zhHans: "欢迎使用 GreenRAM",
+            .zhHant: "歡迎使用 GreenRAM",
+            .ja: "GreenRAM へようこそ",
+            .de: "Willkommen bei GreenRAM",
+            .fr: "Bienvenue dans GreenRAM"
+        ],
+        "onboarding.welcomeMessage": [
+            .en: "GreenRAM lives in the menu bar, watches memory, and quits background apps that have been idle too long by clear rules, so the app in front stays fast.",
+            .zhHans: "GreenRAM 常驻菜单栏，观察内存状态，按清晰的规则退出闲置太久的后台 App，让前台保持流畅。",
+            .zhHant: "GreenRAM 常駐選單列，觀察記憶體狀態，依明確規則退出閒置太久的後台 App，讓前台保持流暢。",
+            .ja: "GreenRAM はメニューバーに常駐してメモリを監視し、長くアイドル状態のバックグラウンドアプリを明確なルールで終了して、手前のアプリを快適に保ちます。",
+            .de: "GreenRAM sitzt in der Menüleiste, beobachtet den Speicher und beendet nach klaren Regeln Hintergrund-Apps, die zu lange inaktiv sind – damit die App im Vordergrund flüssig bleibt.",
+            .fr: "GreenRAM réside dans la barre des menus, surveille la mémoire et ferme selon des règles claires les apps restées trop longtemps inactives en arrière-plan, pour que l’app au premier plan reste fluide."
+        ],
+        "onboarding.insightTitle": [
+            .en: "See where memory goes",
+            .zhHans: "看清内存去向",
+            .zhHant: "看清記憶體去向",
+            .ja: "メモリの行き先がわかる",
+            .de: "Sehen, wohin der Speicher geht",
+            .fr: "Voir où part la mémoire"
+        ],
+        "onboarding.insightDetail": [
+            .en: "The main window lays out every app and the child processes it started.",
+            .zhHans: "主窗口平铺展示每个 App 以及它拉起的子进程占用的内存。",
+            .zhHant: "主視窗平鋪展示每個 App 及其啟動的子行程所佔用的記憶體。",
+            .ja: "メインウインドウに、すべてのアプリとその子プロセスのメモリを並べて表示します。",
+            .de: "Das Hauptfenster zeigt jede App samt ihrer Kindprozesse auf einen Blick.",
+            .fr: "La fenêtre principale affiche chaque app et les processus enfants qu’elle a lancés."
+        ],
+        "onboarding.cleanTitle": [
+            .en: "Clean by rules",
+            .zhHans: "按规则清理",
+            .zhHant: "依規則清理",
+            .ja: "ルールでクリーンアップ",
+            .de: "Nach Regeln bereinigen",
+            .fr: "Nettoyer selon des règles"
+        ],
+        "onboarding.cleanDetail": [
+            .en: "Background apps are force quit only when their rule is met. The frontmost app and whitelisted apps are never touched.",
+            .zhHans: "只有满足规则时才强制退出后台 App。前台 App 和白名单 App 永远不会被退出。",
+            .zhHant: "只有符合規則時才強制退出後台 App。前台 App 和白名單 App 永遠不會被退出。",
+            .ja: "ルールを満たしたときだけバックグラウンドアプリを強制終了します。最前面のアプリとホワイトリストのアプリは終了しません。",
+            .de: "Hintergrund-Apps werden nur beendet, wenn ihre Regel erfüllt ist. Die App im Vordergrund und Apps auf der Whitelist bleiben unberührt.",
+            .fr: "Les apps en arrière-plan ne sont forcées à quitter que si leur règle est remplie. L’app au premier plan et la liste blanche ne sont jamais touchées."
+        ],
+        "onboarding.childTitle": [
+            .en: "Reclaim idle child processes",
+            .zhHans: "回收闲置子进程",
+            .zhHant: "回收閒置子行程",
+            .ja: "アイドル子プロセスを回収",
+            .de: "Inaktive Kindprozesse freigeben",
+            .fr: "Récupérer les processus enfants inactifs"
+        ],
+        "onboarding.childDetail": [
+            .en: "Language servers, MCP servers and other CLI tools left idle under an app are ended without quitting the app.",
+            .zhHans: "App 名下长期闲置的语言服务器、MCP server 等命令行工具会被结束，App 本身不退出。",
+            .zhHant: "App 名下長期閒置的語言伺服器、MCP server 等命令列工具會被結束，App 本身不退出。",
+            .ja: "アプリの下で放置された言語サーバや MCP サーバなどの CLI ツールを、アプリを終了せずに止めます。",
+            .de: "Language Server, MCP-Server und andere CLI-Tools, die unter einer App ungenutzt laufen, werden beendet – die App selbst bleibt offen.",
+            .fr: "Les serveurs de langage, serveurs MCP et autres outils en ligne de commande inactifs sous une app sont arrêtés, sans fermer l’app."
+        ],
+        "onboarding.rulesTitle": [
+            .en: "Cleanup Rules",
+            .zhHans: "清理规则",
+            .zhHant: "清理規則",
+            .ja: "クリーンアップのルール",
+            .de: "Bereinigungsregeln",
+            .fr: "Règles de nettoyage"
+        ],
+        "onboarding.rulesMessage": [
+            .en: "The timer starts when an app leaves the foreground (%d minutes by default). After that, the app’s rule decides whether it is quit.",
+            .zhHans: "App 离开前台后开始计时，默认 %d 分钟。到点之后，按 App 所属的规则决定是否退出。",
+            .zhHant: "App 離開前台後開始計時，預設 %d 分鐘。到時間後，依 App 所屬的規則決定是否退出。",
+            .ja: "アプリが最前面から外れるとタイマーが始まります（初期値 %d 分）。時間が来たら、そのアプリのルールで終了するか決まります。",
+            .de: "Die Zeit läuft, sobald eine App den Vordergrund verlässt (standardmäßig %d Minuten). Danach entscheidet die Regel der App, ob sie beendet wird.",
+            .fr: "Le minuteur démarre quand une app quitte le premier plan (%d minutes par défaut). Ensuite, la règle de l’app décide si elle est fermée."
+        ],
+        "onboarding.whitelistDetail": [
+            .en: "Never quit. Finder, Dock and other system items are included by default and can be edited.",
+            .zhHans: "永不清理。Finder、Dock 等系统项默认在内，可以随时编辑。",
+            .zhHant: "永不清理。Finder、Dock 等系統項預設在內，可隨時編輯。",
+            .ja: "終了しません。Finder や Dock などのシステム項目が初期状態で含まれ、いつでも編集できます。",
+            .de: "Wird nie beendet. Finder, Dock und andere Systemobjekte sind vorab eingetragen und jederzeit änderbar.",
+            .fr: "Jamais fermées. Finder, Dock et d’autres éléments système y figurent par défaut et restent modifiables."
+        ],
+        "onboarding.autoQuitDetail": [
+            .en: "Quit as soon as the background time is reached, without waiting for RAM or Swap limits.",
+            .zhHans: "非前台时间一到就退出，不等 RAM 或 Swap 超限。",
+            .zhHant: "非前台時間一到就退出，不等 RAM 或 Swap 超限。",
+            .ja: "バックグラウンド時間に達したらすぐ終了し、RAM や Swap の超過を待ちません。",
+            .de: "Werden beendet, sobald die Hintergrundzeit erreicht ist – ohne auf RAM- oder Swap-Limits zu warten.",
+            .fr: "Fermées dès que le temps en arrière-plan est atteint, sans attendre les limites de RAM ou de swap."
+        ],
+        "onboarding.ordinaryTitle": [
+            .en: "Other Apps",
+            .zhHans: "普通 App",
+            .zhHant: "一般 App",
+            .ja: "その他のアプリ",
+            .de: "Andere Apps",
+            .fr: "Autres apps"
+        ],
+        "onboarding.ordinaryDetail": [
+            .en: "Quit only after the background time, and only when system memory is over the limit or the app exceeds its own memory limit.",
+            .zhHans: "非前台时间到点，并且系统内存超限或该 App 超过自己的内存上限，才会退出。",
+            .zhHant: "非前台時間到，且系統記憶體超限或該 App 超過自身記憶體上限，才會退出。",
+            .ja: "バックグラウンド時間に達し、さらにシステムメモリが上限を超えるか、アプリ自身のメモリ上限を超えたときだけ終了します。",
+            .de: "Werden erst nach Ablauf der Hintergrundzeit beendet – und nur, wenn der Systemspeicher das Limit überschreitet oder die App ihr eigenes Speicherlimit erreicht.",
+            .fr: "Fermées seulement après le temps en arrière-plan, et seulement si la mémoire système dépasse la limite ou si l’app dépasse sa propre limite."
+        ],
+        "onboarding.childRuleTitle": [
+            .en: "Idle Child Processes",
+            .zhHans: "闲置子进程",
+            .zhHant: "閒置子行程",
+            .ja: "アイドル子プロセス",
+            .de: "Inaktive Kindprozesse",
+            .fr: "Processus enfants inactifs"
+        ],
+        "onboarding.childRuleDetail": [
+            .en: "External child process groups idle for %d minutes and using %@ or more are ended. The app itself keeps running.",
+            .zhHans: "外部子进程组闲置 %d 分钟且合计达到 %@ 时被结束，App 本身继续运行。",
+            .zhHant: "外部子行程組閒置 %d 分鐘且合計達到 %@ 時會被結束，App 本身繼續執行。",
+            .ja: "%d 分間アイドルで合計 %@ 以上の外部子プロセス群を終了します。アプリ自体は動き続けます。",
+            .de: "Externe Kindprozessgruppen, die %d Minuten inaktiv sind und zusammen mindestens %@ belegen, werden beendet. Die App läuft weiter.",
+            .fr: "Les groupes de processus enfants externes inactifs depuis %d minutes et utilisant au moins %@ sont arrêtés. L’app continue de tourner."
+        ],
+        "onboarding.readyTitle": [
+            .en: "You’re All Set",
+            .zhHans: "准备就绪",
+            .zhHant: "準備就緒",
+            .ja: "準備完了",
+            .de: "Alles bereit",
+            .fr: "Tout est prêt"
+        ],
+        "onboarding.readyMessage": [
+            .en: "GreenRAM is already working. Rules and thresholds can be changed any time in the main window.",
+            .zhHans: "GreenRAM 已经开始工作。规则和阈值随时可以在主窗口里调整。",
+            .zhHant: "GreenRAM 已開始運作。規則和閾值隨時可以在主視窗中調整。",
+            .ja: "GreenRAM はすでに動作しています。ルールやしきい値はメインウインドウでいつでも変更できます。",
+            .de: "GreenRAM arbeitet bereits. Regeln und Schwellen lassen sich jederzeit im Hauptfenster ändern.",
+            .fr: "GreenRAM est déjà au travail. Règles et seuils se modifient à tout moment dans la fenêtre principale."
+        ],
+        "onboarding.menuBarTitle": [
+            .en: "The menu bar leaf",
+            .zhHans: "菜单栏叶子",
+            .zhHant: "選單列葉子",
+            .ja: "メニューバーの葉",
+            .de: "Das Blatt in der Menüleiste",
+            .fr: "La feuille dans la barre des menus"
+        ],
+        "onboarding.menuBarDetail": [
+            .en: "Green means memory is within limits, red means over the limit. Click it for live status and quick actions.",
+            .zhHans: "绿色表示内存正常，红色表示已超限。点击查看实时状态和常用操作。",
+            .zhHant: "綠色表示記憶體正常，紅色表示已超限。點按查看即時狀態和常用操作。",
+            .ja: "緑はメモリが範囲内、赤は上限超過を示します。クリックするとリアルタイムの状態とよく使う操作が表示されます。",
+            .de: "Grün heißt Speicher im Limit, rot heißt Limit überschritten. Ein Klick zeigt Live-Status und Schnellaktionen.",
+            .fr: "Vert : mémoire dans les limites ; rouge : limite dépassée. Cliquez pour l’état en direct et les actions rapides."
+        ],
+        "onboarding.mainWindowTitle": [
+            .en: "The main window",
+            .zhHans: "主窗口",
+            .zhHant: "主視窗",
+            .ja: "メインウインドウ",
+            .de: "Das Hauptfenster",
+            .fr: "La fenêtre principale"
+        ],
+        "onboarding.mainWindowDetail": [
+            .en: "Open it from the menu bar panel or the Dock to see all apps, rules and events.",
+            .zhHans: "从菜单栏面板或 Dock 打开，查看全部 App、规则和事件。",
+            .zhHant: "從選單列面板或 Dock 打開，查看全部 App、規則和事件。",
+            .ja: "メニューバーのパネルや Dock から開き、すべてのアプリ、ルール、イベントを確認できます。",
+            .de: "Über das Menüleisten-Panel oder das Dock öffnen, um alle Apps, Regeln und Ereignisse zu sehen.",
+            .fr: "Ouvrez-la depuis le panneau de la barre des menus ou le Dock pour voir apps, règles et événements."
+        ],
+        "onboarding.defaultsTitle": [
+            .en: "Defaults",
+            .zhHans: "默认设置",
+            .zhHant: "預設設定",
+            .ja: "既定の設定",
+            .de: "Standardwerte",
+            .fr: "Réglages par défaut"
+        ],
+        "onboarding.defaultsDetail": [
+            .en: "%d minutes in background, Swap limit %@, at most %d apps per cleanup round.",
+            .zhHans: "后台 %d 分钟、Swap 上限 %@、每轮最多清理 %d 个 App。",
+            .zhHant: "後台 %d 分鐘、Swap 上限 %@、每輪最多清理 %d 個 App。",
+            .ja: "バックグラウンド %d 分、Swap 上限 %@、1 回のクリーンアップは最大 %d 個のアプリ。",
+            .de: "%d Minuten im Hintergrund, Swap-Limit %@, höchstens %d Apps pro Bereinigungsrunde.",
+            .fr: "%d minutes en arrière-plan, limite de swap %@, au plus %d apps par passage."
+        ],
+        "apps.forceQuit": [
+            .en: "Force Quit %@",
+            .zhHans: "强制退出 %@",
+            .zhHant: "強制結束 %@",
+            .ja: "%@ を強制終了",
+            .de: "%@ sofort beenden",
+            .fr: "Forcer %@ à quitter"
+        ],
+        "apps.forceQuitConfirmTitle": [
+            .en: "Force quit “%@”?",
+            .zhHans: "强制退出“%@”？",
+            .zhHant: "強制結束「%@」？",
+            .ja: "“%@”を強制終了しますか？",
+            .de: "„%@“ sofort beenden?",
+            .fr: "Forcer « %@ » à quitter ?"
+        ],
+        "apps.forceQuitConfirmMessage": [
+            .en: "Unsaved changes in the app will be lost.",
+            .zhHans: "该 App 中未保存的内容会丢失。",
+            .zhHant: "該 App 中未儲存的內容會遺失。",
+            .ja: "アプリ内の保存されていない変更は失われます。",
+            .de: "Nicht gesicherte Änderungen in der App gehen verloren.",
+            .fr: "Les modifications non enregistrées dans l’app seront perdues."
+        ],
+        "apps.forceQuitButton": [
+            .en: "Force Quit",
+            .zhHans: "强制退出",
+            .zhHant: "強制結束",
+            .ja: "強制終了",
+            .de: "Sofort beenden",
+            .fr: "Forcer à quitter"
+        ],
+        "event.manualForceQuit": [
+            .en: "Manual force quit requested for %@.",
+            .zhHans: "手动强制退出 %@。",
+            .zhHant: "手動強制結束 %@。",
+            .ja: "%@ の強制終了を手動で要求しました。",
+            .de: "Sofortiges Beenden von %@ manuell angefordert.",
+            .fr: "Fermeture forcée de %@ demandée manuellement."
         ]
     ]
 }

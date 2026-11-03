@@ -233,4 +233,18 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertNil(store.lastUpdateCheckAt)
         XCTAssertNil(store.lastPromptedUpdateVersion)
     }
+
+    func testOnboardingCompletionPersistsAndSurvivesPolicyReset() {
+        let suiteName = "milu.greenram.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(defaults: defaults)
+        XCTAssertFalse(store.hasCompletedOnboarding)
+
+        store.hasCompletedOnboarding = true
+        store.resetMemoryPolicyDefaults()
+
+        XCTAssertTrue(SettingsStore(defaults: defaults).hasCompletedOnboarding)
+    }
 }

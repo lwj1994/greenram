@@ -9,6 +9,11 @@ public struct SystemMemorySnapshot: Equatable {
     public let swapTotalBytes: UInt64
     public let swapUsedBytes: UInt64
     public let swapAvailableBytes: UInt64
+    /// 内存构成，口径与活动监视器一致：App 内存 = 匿名页 - 可清除页；缓存文件 = 文件页 + 可清除页。
+    public let appMemoryBytes: UInt64
+    public let wiredBytes: UInt64
+    public let compressedBytes: UInt64
+    public let cachedFilesBytes: UInt64
 
     public var usedPhysicalPercent: Double {
         guard totalPhysicalBytes > 0 else { return 0 }
@@ -27,7 +32,11 @@ public struct SystemMemorySnapshot: Equatable {
         freePhysicalBytes: UInt64,
         swapTotalBytes: UInt64,
         swapUsedBytes: UInt64,
-        swapAvailableBytes: UInt64
+        swapAvailableBytes: UInt64,
+        appMemoryBytes: UInt64 = 0,
+        wiredBytes: UInt64 = 0,
+        compressedBytes: UInt64 = 0,
+        cachedFilesBytes: UInt64 = 0
     ) {
         self.capturedAt = capturedAt
         self.totalPhysicalBytes = totalPhysicalBytes
@@ -36,6 +45,10 @@ public struct SystemMemorySnapshot: Equatable {
         self.swapTotalBytes = swapTotalBytes
         self.swapUsedBytes = swapUsedBytes
         self.swapAvailableBytes = swapAvailableBytes
+        self.appMemoryBytes = appMemoryBytes
+        self.wiredBytes = wiredBytes
+        self.compressedBytes = compressedBytes
+        self.cachedFilesBytes = cachedFilesBytes
     }
 }
 
@@ -72,9 +85,12 @@ public enum SystemMemoryMonitor {
         let totalPhysicalBytes = ProcessInfo.processInfo.physicalMemory
         let vmStats = captureVMStatistics()
         let swap = captureSwapUsage()
+        let statistics = vmStats.statistics
         let pageSize = UInt64(vmStats.pageSize)
-        let freeBytes = UInt64(vmStats.statistics.free_count) * pageSize
+        let freeBytes = UInt64(statistics.free_count) * pageSize
         let usedBytes = totalPhysicalBytes > freeBytes ? totalPhysicalBytes - freeBytes : 0
+        let internalPages = UInt64(statistics.internal_page_count)
+        let purgeablePages = UInt64(statistics.purgeable_count)
 
         return SystemMemorySnapshot(
             totalPhysicalBytes: totalPhysicalBytes,
@@ -82,7 +98,11 @@ public enum SystemMemoryMonitor {
             freePhysicalBytes: freeBytes,
             swapTotalBytes: swap.total,
             swapUsedBytes: swap.used,
-            swapAvailableBytes: swap.available
+            swapAvailableBytes: swap.available,
+            appMemoryBytes: (internalPages > purgeablePages ? internalPages - purgeablePages : 0) * pageSize,
+            wiredBytes: UInt64(statistics.wire_count) * pageSize,
+            compressedBytes: UInt64(statistics.compressor_page_count) * pageSize,
+            cachedFilesBytes: (UInt64(statistics.external_page_count) + purgeablePages) * pageSize
         )
     }
 

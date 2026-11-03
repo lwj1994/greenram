@@ -53,6 +53,18 @@ public struct MemoryPolicyConfiguration: Equatable {
     }
 }
 
+/// App 在清理规则下的当前状态，用于界面展示。
+public enum AppCleanupStatus: Hashable {
+    /// 白名单 App 或 GreenRAM 自己，永不清理。
+    case protected
+    /// 当前前台 App。
+    case foreground
+    /// 已满足清理条件。
+    case cleanable
+    /// 尚未满足清理条件。
+    case waiting
+}
+
 public final class MemoryPolicyEngine {
     public var configuration: MemoryPolicyConfiguration
     private weak var terminator: AppTerminating?
@@ -143,6 +155,18 @@ public final class MemoryPolicyEngine {
 
         guard app.backgroundDuration(now: now) >= backgroundDurationThreshold else { return false }
         return isAutoQuitApp || configuration.isMemoryLimitExceeded || configuration.isAppMemoryLimitExceeded(app)
+    }
+
+    public func cleanupStatus(_ app: AppRuntimeState, now: Date = Date()) -> AppCleanupStatus {
+        if app.isWhitelisted
+            || app.pid == ProcessInfo.processInfo.processIdentifier
+            || AppIdentity.isOwnBundleIdentifier(app.bundleID) {
+            return .protected
+        }
+        if app.isFrontmost {
+            return .foreground
+        }
+        return shouldTerminate(app, now: now) ? .cleanable : .waiting
     }
 
     public func score(_ app: AppRuntimeState, now: Date = Date()) -> Double {
