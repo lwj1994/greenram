@@ -4,6 +4,16 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.13.0 - 2026-11-03
+
+- Replaced the menu bar dropdown with a menu bar panel showing RAM / Swap, top memory apps, a frontmost-app whitelist toggle, and Clean Apps Now.
+- Added a main window with Overview, All Apps, Recent Events, per-rule App Rules pages, and Settings. The standalone Settings window is removed.
+- Overview shows stat tiles, a memory composition bar, and a treemap of every app sized by its whole process tree and colored by cleanup status.
+- All Apps adds filter, search, expandable child processes, and per-app whitelist, timeout auto-close, and force-quit actions.
+- Added first-launch onboarding explaining the cleanup rules; it can be reopened from Settings.
+- GreenRAM shows a Dock icon and app menu while a window is open, and returns to menu bar only when all windows close.
+- Added idle child process cleanup: external child process groups (CLI tools, language servers, MCP servers) idle for 30 minutes and using 100 MB or more are ended without quitting the app, and each cleaned group is recorded in Recent Events.
+
 ## v0.12.1 - 2026-06-29
 
 - Refined the app icon for macOS 13-15 by adding transparent padding and rounded corners to the legacy `.icns` asset.
