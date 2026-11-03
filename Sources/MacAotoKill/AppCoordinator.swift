@@ -282,7 +282,7 @@ final class AppCoordinator: NSObject, DashboardActions {
     // MARK: - 前台 App
 
     private func observeFrontmostApplication() {
-        if let app = NSWorkspace.shared.frontmostApplication, !AppIdentity.isOwnBundleIdentifier(app.bundleIdentifier) {
+        if let app = NSWorkspace.shared.frontmostApplication, !Self.isOwnApplication(app) {
             lastExternalFrontmostApp = app
         }
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -296,11 +296,17 @@ final class AppCoordinator: NSObject, DashboardActions {
     @objc private func applicationDidActivate(_ notification: Notification) {
         guard
             let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-            !AppIdentity.isOwnBundleIdentifier(app.bundleIdentifier)
+            !Self.isOwnApplication(app)
         else {
             return
         }
         lastExternalFrontmostApp = app
+    }
+
+    /// `swift run` 启动时没有 Bundle ID，所以同时按 pid 排除自己。
+    private static func isOwnApplication(_ app: NSRunningApplication) -> Bool {
+        app.processIdentifier == ProcessInfo.processInfo.processIdentifier
+            || AppIdentity.isOwnBundleIdentifier(app.bundleIdentifier)
     }
 
     /// 打开菜单栏面板时 GreenRAM 会成为前台，这里取的是在它之前的那个 App。

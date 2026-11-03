@@ -8,13 +8,29 @@ GreenRAM 是一个 macOS 菜单栏 App。它会观察系统内存状态，并按
 
 ## 截图
 
-### 菜单
+### 主窗口
 
-![GreenRAM menu](docs/screenshots/menu.png)
+概览页展示 RAM / Swap、内存构成，以及按整个进程树内存平铺的所有 App。
+
+![GreenRAM 主窗口概览](docs/screenshots/overview.png)
+
+### 全部 App
+
+筛选、搜索运行中的 App，展开查看子进程，并在行菜单里加入白名单、超时自动关闭或强制退出。
+
+![GreenRAM 全部 App](docs/screenshots/apps.png)
+
+### 菜单栏面板
+
+<img src="docs/screenshots/menu.png" width="360" alt="GreenRAM 菜单栏面板">
+
+### 引导页
+
+![GreenRAM 引导页](docs/screenshots/onboarding.png)
 
 ### 设置
 
-![GreenRAM settings window](docs/screenshots/settings.png)
+![GreenRAM 设置](docs/screenshots/settings.png)
 
 ## 功能
 

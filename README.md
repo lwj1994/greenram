@@ -8,13 +8,29 @@ It is built for a simple case: keep the frontmost app responsive, remove backgro
 
 ## Screenshots
 
-### Menu
+### Main Window
 
-![GreenRAM menu](docs/screenshots/menu.png)
+The overview shows RAM / Swap, memory composition, and every app laid out as a treemap sized by its whole process tree.
+
+![GreenRAM main window overview](docs/screenshots/overview.png)
+
+### All Apps
+
+Filter and search running apps, expand an app to see its child processes, and whitelist, auto-close, or force quit it from the row menu.
+
+![GreenRAM all apps](docs/screenshots/apps.png)
+
+### Menu Bar Panel
+
+<img src="docs/screenshots/menu.png" width="360" alt="GreenRAM menu bar panel">
+
+### Welcome Guide
+
+![GreenRAM welcome guide](docs/screenshots/onboarding.png)
 
 ### Settings
 
-![GreenRAM settings window](docs/screenshots/settings.png)
+![GreenRAM settings](docs/screenshots/settings.png)
 
 ## Features
 
