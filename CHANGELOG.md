@@ -4,6 +4,12 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.14.0 - 2026-11-04
+
+- Added System Processes: an Overview treemap below the app treemap and a dedicated page listing every process outside any app, measured like Activity Monitor so root processes report their real memory.
+- Right-click a system process to force quit it. Your own processes are ended after a confirmation; root and other users' processes ask for an administrator password. Critical processes such as launchd and WindowServer can't be quit.
+- Added memory leak detection for system processes: 4 GB or more and up 2 GB within an hour, or known leaky services such as `PerfPowerServicesSignpostReader`. Leaking Apple system services are ended automatically; other processes such as IDE JVMs or virtual machines are only flagged and recorded in Recent Events.
+
 ## v0.13.0 - 2026-11-03
 
 - Replaced the menu bar dropdown with a menu bar panel showing RAM / Swap, top memory apps, a frontmost-app whitelist toggle, and Clean Apps Now.
