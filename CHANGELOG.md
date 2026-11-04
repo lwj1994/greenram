@@ -4,6 +4,10 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.14.1 - 2026-11-04
+
+- Menu bar apps (no Dock icon) and their child processes now count as apps instead of system processes. They follow the same cleanup rules as other apps; add them to the whitelist to keep them running.
+
 ## v0.14.0 - 2026-11-04
 
 - Added System Processes: an Overview treemap below the app treemap and a dedicated page listing every process outside any app, measured like Activity Monitor so root processes report their real memory.
