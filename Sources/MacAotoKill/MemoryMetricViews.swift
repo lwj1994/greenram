@@ -68,10 +68,27 @@ struct MemorySegment: Identifiable {
 }
 
 enum MemoryComposition {
-    /// 固定顺序：App 内存、联动内存、已压缩、缓存文件，最后是剩余可用。
-    static func segments(_ memory: SystemMemorySnapshot, localizer: Localizer) -> [MemorySegment] {
+    /// 固定顺序：App 内存、系统进程、联动内存、已压缩、缓存文件，最后是剩余可用。
+    ///
+    /// 系统的 App 内存（匿名页 − 可清除页）包含所有进程，不只是 App。进程 footprint 还含压缩、swap 和图形内存，
+    /// 总和远超物理内存，不能直接画进条里；所以总量仍用系统口径，按 App 进程树与系统进程的 footprint 占比拆成两段。
+    /// 系统进程还没采样完时（`systemProcessBytes` 为 nil）不拆。
+    static func segments(
+        _ memory: SystemMemorySnapshot,
+        appProcessBytes: UInt64,
+        systemProcessBytes: UInt64?,
+        localizer: Localizer
+    ) -> [MemorySegment] {
+        var appBytes = memory.appMemoryBytes
+        var systemBytes: UInt64 = 0
+        if let systemProcessBytes, appProcessBytes + systemProcessBytes > 0 {
+            let appShare = Double(appProcessBytes) / Double(appProcessBytes + systemProcessBytes)
+            appBytes = UInt64(Double(memory.appMemoryBytes) * appShare)
+            systemBytes = memory.appMemoryBytes - appBytes
+        }
         let used = [
-            MemorySegment(id: "app", title: localizer.t("composition.app"), bytes: memory.appMemoryBytes, color: Palette.appMemory),
+            MemorySegment(id: "app", title: localizer.t("composition.app"), bytes: appBytes, color: Palette.appMemory),
+            MemorySegment(id: "system", title: localizer.t("composition.system"), bytes: systemBytes, color: Palette.systemMemory),
             MemorySegment(id: "wired", title: localizer.t("composition.wired"), bytes: memory.wiredBytes, color: Palette.wired),
             MemorySegment(id: "compressed", title: localizer.t("composition.compressed"), bytes: memory.compressedBytes, color: Palette.compressed),
             MemorySegment(id: "cached", title: localizer.t("composition.cached"), bytes: memory.cachedFilesBytes, color: Palette.cachedFiles)

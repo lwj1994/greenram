@@ -20,6 +20,7 @@ enum Palette {
 
     // 内存构成：分类色 1–4，固定顺序。
     static let appMemory = Color(light: 0x2A78D6, dark: 0x3987E5)
+    static let systemMemory = Color(light: 0x8A63D2, dark: 0x9D7BE0)
     static let wired = Color(light: 0xEB6834, dark: 0xD95926)
     static let compressed = Color(light: 0x1BAF7A, dark: 0x199E70)
     static let cachedFiles = Color(light: 0xEDA100, dark: 0xC98500)

@@ -1487,6 +1487,14 @@ public struct Localizer: Equatable {
             .de: "App-Speicher",
             .fr: "Mémoire des apps"
         ],
+        "composition.system": [
+            .en: "System Processes",
+            .zhHans: "系统进程",
+            .zhHant: "系統行程",
+            .ja: "システムプロセス",
+            .de: "Systemprozesse",
+            .fr: "Processus système"
+        ],
         "composition.wired": [
             .en: "Wired",
             .zhHans: "联动内存",

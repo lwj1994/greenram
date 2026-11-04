@@ -69,7 +69,12 @@ struct OverviewPage: View {
     }
 
     private var compositionCard: some View {
-        let segments = MemoryComposition.segments(state.memory, localizer: localizer)
+        let segments = MemoryComposition.segments(
+            state.memory,
+            appProcessBytes: state.totalAppMemoryBytes,
+            systemProcessBytes: state.systemProcesses?.totalMemoryBytes,
+            localizer: localizer
+        )
         return VStack(alignment: .leading, spacing: 14) {
             CardTitle(
                 title: localizer.t("overview.composition"),
