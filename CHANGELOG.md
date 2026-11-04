@@ -4,6 +4,10 @@
 
 All notable GreenRAM release changes are recorded here.
 
+## v0.14.2 - 2026-11-04
+
+- The Overview memory composition bar now splits App Memory into apps and system processes. macOS App Memory covers every process, so the share is divided by the memory of app process trees versus system processes.
+
 ## v0.14.1 - 2026-11-04
 
 - Menu bar apps (no Dock icon) and their child processes now count as apps instead of system processes. They follow the same cleanup rules as other apps; add them to the whitelist to keep them running.
