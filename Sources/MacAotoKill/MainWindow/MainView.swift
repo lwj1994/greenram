@@ -55,6 +55,7 @@ struct MainView: View {
             Section(localizer.t("sidebar.monitor")) {
                 sidebarRow(.overview, badge: nil)
                 sidebarRow(.apps, badge: state.cleanableApps.count)
+                sidebarRow(.systemProcesses, badge: state.suspectedLeakPIDs.count)
                 sidebarRow(.events, badge: nil)
             }
 
@@ -93,6 +94,8 @@ struct MainView: View {
             OverviewPage(viewModelSpec: dashboardSpec)
         case .apps:
             AppsPage(viewModelSpec: dashboardSpec)
+        case .systemProcesses:
+            SystemProcessesPage(viewModelSpec: dashboardSpec)
         case .events:
             EventsPage(viewModelSpec: dashboardSpec)
         case .autoQuit:
@@ -114,6 +117,7 @@ extension MainPage {
         switch self {
         case .overview: return localizer.t("sidebar.overview")
         case .apps: return localizer.t("menu.backgroundApps")
+        case .systemProcesses: return localizer.t("systemProcesses.title")
         case .events: return localizer.t("menu.recentEvents")
         case .autoQuit: return localizer.t("settings.autoQuitApps")
         case .idleTimes: return localizer.t("settings.appIdleTimes")
@@ -127,6 +131,7 @@ extension MainPage {
         switch self {
         case .overview: return "gauge.medium"
         case .apps: return "square.grid.2x2"
+        case .systemProcesses: return "gearshape.2"
         case .events: return "clock.arrow.circlepath"
         case .autoQuit: return "power.circle"
         case .idleTimes: return "timer"

@@ -65,3 +65,20 @@ GreenRAM 当前按三组规则判断某个 App 是否可清理：
 - 前台 App 的子进程不清理。白名单只保护 App 不被退出，不阻止子进程清理。
 - 先 SIGTERM，5 秒后 SIGKILL；发信号前用进程启动时间排除 pid 复用。每个子进程组只尝试一次。
 - 每个被清理的组记一条事件：所属 App、进程数、内存、闲置时长、每个进程的命令名和 PID。
+
+## System Processes
+
+系统进程：不属于任何 App 进程树的进程（launchd 拉起的服务、脱离 IDE 的 Gradle / Kotlin daemon、虚拟机等），独立于 App 规则和子进程规则：
+
+- GreenRAM 没有 root：`proc_pid_rusage` 读不到其他用户的进程，`kill` 也发不了信号。内存用 setuid 的 `/usr/bin/top` 读（与活动监视器「内存」列同口径），在后台线程执行；面板或主窗口可见时每 10 秒一次，否则每 5 分钟一次。
+- 概览有「系统进程」卡片，侧栏有系统进程页。右键可强制退出：当前用户的进程先确认再 SIGKILL；其他用户（root 等）的进程弹管理员密码框。
+- 关键进程（launchd、WindowServer、loginwindow 等，见 `SystemProcessTerminator.protectedNames`）永远不能结束，也不参与泄漏判断。
+- 提权通过启动 `/usr/bin/osascript` 执行 `do shell script ... with administrator privileges`。不能用进程内 NSAppleScript：authd 会校验 GreenRAM 自己的签名，ad-hoc 签名的开发版直接授权失败。root shell 里先核对 pid 的可执行文件名再 `kill -9`，排除输入密码期间的 pid 复用。
+
+疑似内存泄漏（启发式，不分析进程堆）：
+
+- 当前内存 ≥ 4 GB，且 1 小时内比最低点增长 ≥ 2 GB。每分钟最多记一个点，历史只保留 1 小时，进程退出即丢弃。
+- 已知会泄漏的服务（当前只有 `PerfPowerServicesSignpostReader`）达到 4 GB 即算，不需要增长历史。
+- Apple 系统路径（`/System/`、`/usr/libexec/`、`/usr/sbin/`、`/usr/bin/`、`/sbin/`、`/bin/`）下的进程自动结束：当前用户的直接结束，root 的弹管理员密码框，一次只弹一个，密码框里写明进程名和占用。
+- 其他进程（开发工具的 JVM、虚拟机、Homebrew 工具等）可能是正常占用，只标「疑似泄漏」并记事件，由用户右键结束。
+- 每个进程（pid + 启动时间）只处理一次，取消密码框也算处理过；服务重启后是新进程。

@@ -102,6 +102,15 @@ final class AppCoordinator: NSObject, DashboardActions {
     private let automaticReleaseCooldown: TimeInterval = 60
     private let automaticUpdateCheckInterval: TimeInterval = 24 * 60 * 60
     private let liveRefreshInterval: TimeInterval = 3
+    private let memoryLeakDetector = SystemMemoryLeakDetector()
+    private var systemProcessSummary: SystemProcessSummary?
+    private var suspectedLeakPIDs: Set<pid_t> = []
+    private var lastSystemProcessSampleAt: Date?
+    private var isSamplingSystemProcesses = false
+    /// 同一时间只弹一个管理员密码框。
+    private var isAwaitingAdminPassword = false
+    private let visibleSystemProcessSampleInterval: TimeInterval = 10
+    private let backgroundSystemProcessSampleInterval: TimeInterval = 5 * 60
 
     private var localizer: Localizer {
         Localizer(languageCode: settingsStore.languageCode)
@@ -185,6 +194,43 @@ final class AppCoordinator: NSObject, DashboardActions {
         if forcePublish || isDashboardVisible {
             publishDashboard()
         }
+        sampleSystemProcessesIfNeeded()
+    }
+
+    /// 用 `top` 读一次全部进程的内存，在后台线程执行：面板或主窗口可见时每 10 秒，否则每 5 分钟。
+    /// 每次采样后做泄漏检查。
+    private func sampleSystemProcessesIfNeeded() {
+        let now = Date()
+        guard !isSamplingSystemProcesses else { return }
+        let interval = isDashboardVisible ? visibleSystemProcessSampleInterval : backgroundSystemProcessSampleInterval
+        if let lastSystemProcessSampleAt, now.timeIntervalSince(lastSystemProcessSampleAt) < interval {
+            return
+        }
+
+        lastSystemProcessSampleAt = now
+        isSamplingSystemProcesses = true
+        let tree = processMonitor.lastProcessTree
+        let appPIDs = snapshot.map(\.pid)
+        Task.detached(priority: .utility) {
+            let summary = SystemProcessSampler.summarize(
+                tree: tree,
+                appPIDs: appPIDs,
+                memoryByPID: TopMemoryReader.readMemory()
+            )
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                isSamplingSystemProcesses = false
+                systemProcessSummary = summary
+                memoryLeakDetector.observe(summary)
+                let suspectedPIDs = Set(memoryLeakDetector.suspects(in: summary).map(\.process.pid))
+                suspectedLeakPIDs = suspectedPIDs
+                dashboard.update {
+                    $0.systemProcesses = summary
+                    $0.suspectedLeakPIDs = suspectedPIDs
+                }
+                handleMemoryLeaks(in: summary)
+            }
+        }
     }
 
     private func publishDashboard() {
@@ -230,6 +276,8 @@ final class AppCoordinator: NSObject, DashboardActions {
             state.apps = apps
             state.idleChildGroupCount = idleGroups.count
             state.idleChildMemoryBytes = idleGroups.reduce(0) { $0 + $1.memoryBytes }
+            state.systemProcesses = systemProcessSummary
+            state.suspectedLeakPIDs = suspectedLeakPIDs
             state.events = eventLog.recentEntries(limit: 500)
             state.frontmostApp = frontmostAppInfo()
             state.isCheckingForUpdates = isCheckingForUpdates
@@ -269,6 +317,96 @@ final class AppCoordinator: NSObject, DashboardActions {
         self.lastAutomaticReleaseAt = now
         eventLog.append(localizer.t("event.autoReleaseTrigger", localizer.t("event.backgroundIdleTimeout")))
         memoryPolicyEngine.handleAutomaticRelease(states: snapshot, now: now)
+    }
+
+    // MARK: - 系统进程
+
+    /// 疑似泄漏的 Apple 系统进程自动结束：当前用户的直接结束，root 的弹管理员密码框（一次一个）。
+    /// 其他进程（开发工具的 JVM、虚拟机等）只记事件和标记，由用户右键结束。每个进程只处理一次。
+    private func handleMemoryLeaks(in summary: SystemProcessSummary) {
+        for suspect in memoryLeakDetector.unhandledSuspects(in: summary) {
+            let process = suspect.process
+            let memory = ByteFormatter.memory(process.memoryBytes)
+            let growth = ByteFormatter.memory(suspect.growthBytes)
+
+            guard suspect.isAutoTerminable else {
+                memoryLeakDetector.markHandled(suspect)
+                eventLog.append(localizer.t("event.systemMemoryLeakFlagged", process.name, Int(process.pid), memory, growth))
+                continue
+            }
+
+            let needsPassword = process.entry.userID != getuid()
+            if needsPassword && isAwaitingAdminPassword { continue }
+            memoryLeakDetector.markHandled(suspect)
+            eventLog.append(localizer.t("event.systemMemoryLeakTerminating", process.name, Int(process.pid), memory, growth))
+            terminateSystemProcess(
+                process.entry,
+                name: process.name,
+                adminPrompt: localizer.t("systemProcesses.adminPrompt", process.name, memory)
+            )
+        }
+    }
+
+    private func terminateSystemProcess(_ entry: ProcessTreeEntry, name: String, adminPrompt: String? = nil) {
+        let needsPassword = entry.userID != getuid()
+        if needsPassword {
+            isAwaitingAdminPassword = true
+        }
+        Task.detached(priority: .userInitiated) {
+            let result = SystemProcessTerminator.terminate(entry, adminPrompt: adminPrompt)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                if needsPassword {
+                    isAwaitingAdminPassword = false
+                }
+                switch result {
+                case .terminated:
+                    eventLog.append(localizer.t("event.systemProcessTerminated", name))
+                case .cancelled:
+                    eventLog.append(localizer.t("event.systemProcessTerminateCancelled", name))
+                case .failed(let message):
+                    eventLog.append(localizer.t("event.systemProcessTerminateFailed", name, message))
+                }
+                lastSystemProcessSampleAt = nil
+                refreshSnapshot(forcePublish: true)
+            }
+        }
+    }
+
+    /// 右键强制退出系统进程。root 等其他用户的进程直接弹管理员密码框（密码框即确认）；当前用户的进程先二次确认。
+    func forceQuitSystemProcess(pid: pid_t) {
+        guard let process = systemProcessSummary?.processes.first(where: { $0.pid == pid }), !process.isProtected else {
+            return
+        }
+
+        if process.entry.userID == getuid() {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.icon = nil
+            alert.messageText = localizer.t("apps.forceQuitConfirmTitle", process.name)
+            alert.informativeText = localizer.t("systemProcesses.forceQuitConfirmMessage")
+            alert.addButton(withTitle: localizer.t("apps.forceQuitButton"))
+            alert.addButton(withTitle: localizer.t("settings.cancel"))
+            alert.buttons.first?.hasDestructiveAction = true
+
+            statusItemController?.closePopover()
+            NSApp.activate(ignoringOtherApps: true)
+            if let window = mainWindowController?.window, window.isVisible {
+                alert.beginSheetModal(for: window) { [weak self] response in
+                    if response == .alertFirstButtonReturn {
+                        self?.requestSystemProcessTermination(process)
+                    }
+                }
+                return
+            }
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+        requestSystemProcessTermination(process)
+    }
+
+    private func requestSystemProcessTermination(_ process: SystemProcessUsage) {
+        eventLog.append(localizer.t("event.manualForceQuit", process.name))
+        terminateSystemProcess(process.entry, name: process.name)
     }
 
     private func updateStatusItem() {
