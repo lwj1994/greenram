@@ -33,8 +33,8 @@ struct OverviewPage: View {
 
                 statTiles
                 compositionCard
-                SystemProcessesCard(viewModel: viewModel, localizer: localizer)
                 treemapCard
+                SystemProcessesCard(viewModel: viewModel, localizer: localizer)
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 24)

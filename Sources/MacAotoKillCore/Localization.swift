@@ -2095,6 +2095,22 @@ public struct Localizer: Equatable {
             .de: "Sofortiges Beenden von %@ manuell angefordert.",
             .fr: "Fermeture forcée de %@ demandée manuellement."
         ],
+        "treemap.otherProcesses": [
+            .en: "%d other processes",
+            .zhHans: "其他 %d 个进程",
+            .zhHant: "其他 %d 個行程",
+            .ja: "その他 %d 個のプロセス",
+            .de: "%d weitere Prozesse",
+            .fr: "%d autres processus"
+        ],
+        "systemProcesses.otherUsers": [
+            .en: "root & other users",
+            .zhHans: "root 和其他用户",
+            .zhHant: "root 和其他使用者",
+            .ja: "root と他のユーザ",
+            .de: "root & andere Benutzer",
+            .fr: "root et autres utilisateurs"
+        ],
         "systemProcesses.title": [
             .en: "System Processes",
             .zhHans: "系统进程",

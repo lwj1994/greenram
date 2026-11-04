@@ -35,6 +35,22 @@ struct SystemProcessesPage: View {
                 }
 
                 if let summary = state.systemProcesses {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Spacer()
+                            SystemProcessTreemapLegend(localizer: localizer)
+                        }
+                        SystemProcessTreemapView(
+                            processes: summary.processes,
+                            suspectedLeakPIDs: state.suspectedLeakPIDs,
+                            localizer: localizer,
+                            viewModel: viewModel,
+                            onSelect: { process in searchText = process.map { String($0.pid) } ?? "" }
+                        )
+                        .frame(height: 280)
+                    }
+                    .card(padding: 18)
+
                     let processes = filtered(summary.processes)
                     let maxMemoryBytes = summary.processes.first?.memoryBytes ?? 0
                     LazyVStack(spacing: 6) {
@@ -66,18 +82,17 @@ struct SystemProcessesPage: View {
     }
 }
 
-/// 概览页的系统进程卡片：只列内存最高的几个，点击进入系统进程页。
+/// 概览页的系统进程卡片：平铺图，点击进入系统进程页。
 struct SystemProcessesCard: View {
     let viewModel: DashboardViewModel
     let localizer: Localizer
-    private let visibleCount = 6
 
     private var state: DashboardState {
         viewModel.state
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 CardTitle(
                     title: localizer.t("systemProcesses.title"),
@@ -86,6 +101,7 @@ struct SystemProcessesCard: View {
                     }
                 )
                 Spacer()
+                SystemProcessTreemapLegend(localizer: localizer)
                 Button {
                     viewModel.select(.systemProcesses)
                 } label: {
@@ -96,21 +112,14 @@ struct SystemProcessesCard: View {
             }
 
             if let summary = state.systemProcesses {
-                let maxMemoryBytes = summary.processes.first?.memoryBytes ?? 0
-                VStack(spacing: 6) {
-                    ForEach(summary.processes.prefix(visibleCount)) { process in
-                        SystemProcessRow(
-                            process: process,
-                            isSuspectedLeak: state.suspectedLeakPIDs.contains(process.pid),
-                            maxMemoryBytes: maxMemoryBytes,
-                            localizer: localizer,
-                            viewModel: viewModel
-                        )
-                        .onTapGesture {
-                            viewModel.select(.systemProcesses)
-                        }
-                    }
-                }
+                SystemProcessTreemapView(
+                    processes: summary.processes,
+                    suspectedLeakPIDs: state.suspectedLeakPIDs,
+                    localizer: localizer,
+                    viewModel: viewModel,
+                    onSelect: { _ in viewModel.select(.systemProcesses) }
+                )
+                .frame(height: 320)
             } else {
                 SystemProcessesLoadingView(localizer: localizer)
             }
@@ -201,16 +210,7 @@ struct SystemProcessRow: View {
         .onHover { isHovered = $0 }
         .help(process.entry.executablePath ?? process.name)
         .contextMenu {
-            if process.isProtected {
-                Text(localizer.t("systemProcesses.protected"))
-            } else {
-                Button(
-                    localizer.t(process.isRoot ? "systemProcesses.forceQuitAdmin" : "apps.forceQuit", process.name),
-                    role: .destructive
-                ) {
-                    viewModel.forceQuitSystemProcess(process)
-                }
-            }
+            SystemProcessMenuItems(process: process, localizer: localizer, viewModel: viewModel)
         }
     }
 
@@ -224,5 +224,25 @@ struct SystemProcessRow: View {
     private static func userName(_ userID: uid_t) -> String {
         guard let passwd = getpwuid(userID) else { return "uid \(userID)" }
         return String(cString: passwd.pointee.pw_name)
+    }
+}
+
+/// 系统进程的右键菜单：关键进程不能结束；root 等其他用户的进程会弹管理员密码框。
+struct SystemProcessMenuItems: View {
+    let process: SystemProcessUsage
+    let localizer: Localizer
+    let viewModel: DashboardViewModel
+
+    var body: some View {
+        if process.isProtected {
+            Text(localizer.t("systemProcesses.protected"))
+        } else {
+            Button(
+                localizer.t(process.entry.userID == getuid() ? "apps.forceQuit" : "systemProcesses.forceQuitAdmin", process.name),
+                role: .destructive
+            ) {
+                viewModel.forceQuitSystemProcess(process)
+            }
+        }
     }
 }
