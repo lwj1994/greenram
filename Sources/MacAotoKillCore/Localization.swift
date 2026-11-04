@@ -2094,6 +2094,158 @@ public struct Localizer: Equatable {
             .ja: "%@ の強制終了を手動で要求しました。",
             .de: "Sofortiges Beenden von %@ manuell angefordert.",
             .fr: "Fermeture forcée de %@ demandée manuellement."
+        ],
+        "treemap.otherProcesses": [
+            .en: "%d other processes",
+            .zhHans: "其他 %d 个进程",
+            .zhHant: "其他 %d 個行程",
+            .ja: "その他 %d 個のプロセス",
+            .de: "%d weitere Prozesse",
+            .fr: "%d autres processus"
+        ],
+        "systemProcesses.otherUsers": [
+            .en: "root & other users",
+            .zhHans: "root 和其他用户",
+            .zhHant: "root 和其他使用者",
+            .ja: "root と他のユーザ",
+            .de: "root & andere Benutzer",
+            .fr: "root et autres utilisateurs"
+        ],
+        "systemProcesses.title": [
+            .en: "System Processes",
+            .zhHans: "系统进程",
+            .zhHant: "系統行程",
+            .ja: "システムプロセス",
+            .de: "Systemprozesse",
+            .fr: "Processus système"
+        ],
+        "systemProcesses.subtitle": [
+            .en: "%d processes outside any app · %@ in total · right-click to force quit; root processes ask for an administrator password",
+            .zhHans: "%d 个不属于任何 App 的进程 · 合计 %@ · 右键可强制退出，root 进程需要管理员密码",
+            .zhHant: "%d 個不屬於任何 App 的行程 · 合計 %@ · 按右鍵可強制結束，root 行程需要管理員密碼",
+            .ja: "どのアプリにも属さないプロセス %d 個 · 合計 %@ · 右クリックで強制終了（root プロセスは管理者パスワードが必要）",
+            .de: "%d Prozesse außerhalb von Apps · insgesamt %@ · Rechtsklick zum sofortigen Beenden; root-Prozesse erfordern ein Administratorpasswort",
+            .fr: "%d processus hors app · %@ au total · clic droit pour forcer à quitter ; les processus root demandent un mot de passe administrateur"
+        ],
+        "systemProcesses.cardHint": [
+            .en: "%d background processes outside any app · %@ in total · measured like Activity Monitor",
+            .zhHans: "%d 个不属于任何 App 的后台进程 · 合计 %@ · 与活动监视器同口径",
+            .zhHant: "%d 個不屬於任何 App 的背景行程 · 合計 %@ · 與活動監視器同口徑",
+            .ja: "どのアプリにも属さないバックグラウンドプロセス %d 個 · 合計 %@ · アクティビティモニタと同じ基準",
+            .de: "%d Hintergrundprozesse außerhalb von Apps · insgesamt %@ · gemessen wie in der Aktivitätsanzeige",
+            .fr: "%d processus d’arrière-plan hors app · %@ au total · mesuré comme le Moniteur d’activité"
+        ],
+        "systemProcesses.search": [
+            .en: "Search processes or PID",
+            .zhHans: "搜索进程名或 PID",
+            .zhHant: "搜尋行程名稱或 PID",
+            .ja: "プロセス名または PID を検索",
+            .de: "Prozess oder PID suchen",
+            .fr: "Rechercher un processus ou un PID"
+        ],
+        "systemProcesses.showAll": [
+            .en: "Show All",
+            .zhHans: "查看全部",
+            .zhHant: "查看全部",
+            .ja: "すべて表示",
+            .de: "Alle anzeigen",
+            .fr: "Tout afficher"
+        ],
+        "systemProcesses.loading": [
+            .en: "Reading process memory…",
+            .zhHans: "正在读取进程内存…",
+            .zhHant: "正在讀取行程記憶體…",
+            .ja: "プロセスのメモリを読み取り中…",
+            .de: "Prozessspeicher wird gelesen …",
+            .fr: "Lecture de la mémoire des processus…"
+        ],
+        "systemProcesses.protected": [
+            .en: "Critical system process, can’t be quit",
+            .zhHans: "关键系统进程，不能结束",
+            .zhHant: "關鍵系統行程，無法結束",
+            .ja: "重要なシステムプロセスのため終了できません",
+            .de: "Kritischer Systemprozess, kann nicht beendet werden",
+            .fr: "Processus système critique, impossible de le quitter"
+        ],
+        "systemProcesses.forceQuitAdmin": [
+            .en: "Force Quit %@ (Administrator)…",
+            .zhHans: "强制退出 %@（需要管理员密码）…",
+            .zhHant: "強制結束 %@（需要管理員密碼）…",
+            .ja: "%@ を強制終了（管理者パスワードが必要）…",
+            .de: "%@ sofort beenden (Administrator) …",
+            .fr: "Forcer %@ à quitter (administrateur)…"
+        ],
+        "systemProcesses.currentUser": [
+            .en: "current user",
+            .zhHans: "当前用户",
+            .zhHant: "目前使用者",
+            .ja: "現在のユーザ",
+            .de: "aktueller Benutzer",
+            .fr: "utilisateur actuel"
+        ],
+        "systemProcesses.forceQuitConfirmMessage": [
+            .en: "The process ends immediately. If it’s a system service, macOS restarts it when needed.",
+            .zhHans: "进程会立即结束。如果它是系统服务，macOS 会在需要时重新启动它。",
+            .zhHant: "行程會立即結束。如果它是系統服務，macOS 會在需要時重新啟動它。",
+            .ja: "プロセスはすぐに終了します。システムサービスの場合は、必要に応じて macOS が再起動します。",
+            .de: "Der Prozess wird sofort beendet. Systemdienste startet macOS bei Bedarf neu.",
+            .fr: "Le processus s’arrête immédiatement. S’il s’agit d’un service système, macOS le relance au besoin."
+        ],
+        "systemProcesses.suspectedLeak": [
+            .en: "Suspected Leak",
+            .zhHans: "疑似泄漏",
+            .zhHant: "疑似洩漏",
+            .ja: "リークの疑い",
+            .de: "Mögliches Leck",
+            .fr: "Fuite suspectée"
+        ],
+        "systemProcesses.adminPrompt": [
+            .en: "GreenRAM wants to end system process %@, which looks like it is leaking memory (%@).",
+            .zhHans: "GreenRAM 要结束疑似内存泄漏的系统进程 %@（占用 %@）。",
+            .zhHant: "GreenRAM 要結束疑似記憶體洩漏的系統行程 %@（佔用 %@）。",
+            .ja: "GreenRAM は、メモリリークの疑いがあるシステムプロセス %@（%@ 使用中）を終了しようとしています。",
+            .de: "GreenRAM möchte den Systemprozess %@ beenden, der vermutlich Speicher verliert (%@).",
+            .fr: "GreenRAM veut arrêter le processus système %@, qui semble perdre de la mémoire (%@)."
+        ],
+        "event.systemMemoryLeakTerminating": [
+            .en: "%@ (PID %d) looks like it is leaking memory: %@, up %@ within an hour. Ending it automatically.",
+            .zhHans: "%@（PID %d）疑似内存泄漏：%@，1 小时内增长 %@，自动结束。",
+            .zhHant: "%@（PID %d）疑似記憶體洩漏：%@，1 小時內增長 %@，自動結束。",
+            .ja: "%@（PID %d）にメモリリークの疑い：%@、1 時間で %@ 増加。自動的に終了します。",
+            .de: "%@ (PID %d) verliert vermutlich Speicher: %@, %@ mehr innerhalb einer Stunde. Wird automatisch beendet.",
+            .fr: "%@ (PID %d) semble perdre de la mémoire : %@, +%@ en une heure. Arrêt automatique."
+        ],
+        "event.systemMemoryLeakFlagged": [
+            .en: "%@ (PID %d) looks like it is leaking memory: %@, up %@ within an hour. Not a system process, so it was left running; right-click it in System Processes to quit it.",
+            .zhHans: "%@（PID %d）疑似内存泄漏：%@，1 小时内增长 %@。不是系统进程，未自动结束，可在系统进程页右键结束。",
+            .zhHant: "%@（PID %d）疑似記憶體洩漏：%@，1 小時內增長 %@。不是系統行程，未自動結束，可在系統行程頁按右鍵結束。",
+            .ja: "%@（PID %d）にメモリリークの疑い：%@、1 時間で %@ 増加。システムプロセスではないため自動終了していません。システムプロセスページで右クリックして終了できます。",
+            .de: "%@ (PID %d) verliert vermutlich Speicher: %@, %@ mehr innerhalb einer Stunde. Kein Systemprozess, daher nicht beendet; per Rechtsklick unter Systemprozesse beenden.",
+            .fr: "%@ (PID %d) semble perdre de la mémoire : %@, +%@ en une heure. Ce n’est pas un processus système, il n’a pas été arrêté ; clic droit dans Processus système pour le quitter."
+        ],
+        "event.systemProcessTerminateCancelled": [
+            .en: "Cancelled ending system process %@.",
+            .zhHans: "已取消结束系统进程 %@。",
+            .zhHant: "已取消結束系統行程 %@。",
+            .ja: "システムプロセス %@ の終了をキャンセルしました。",
+            .de: "Beenden von Systemprozess %@ abgebrochen.",
+            .fr: "Arrêt du processus système %@ annulé."
+        ],
+        "event.systemProcessTerminated": [
+            .en: "Ended system process %@.",
+            .zhHans: "已结束系统进程 %@。",
+            .zhHant: "已結束系統行程 %@。",
+            .ja: "システムプロセス %@ を終了しました。",
+            .de: "Systemprozess %@ beendet.",
+            .fr: "Processus système %@ arrêté."
+        ],
+        "event.systemProcessTerminateFailed": [
+            .en: "Failed to end system process %@: %@",
+            .zhHans: "结束系统进程 %@ 失败：%@",
+            .zhHant: "結束系統行程 %@ 失敗：%@",
+            .ja: "システムプロセス %@ の終了に失敗しました：%@",
+            .de: "Beenden von Systemprozess %@ fehlgeschlagen: %@",
+            .fr: "Échec de l’arrêt du processus système %@ : %@"
         ]
     ]
 }

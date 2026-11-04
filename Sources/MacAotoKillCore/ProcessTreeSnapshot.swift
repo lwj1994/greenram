@@ -12,6 +12,8 @@ public struct ProcessTreeEntry: Equatable {
     /// 进程启动时间（Unix 时间戳），与 pid 一起标识进程，避免 pid 复用误判。
     public let startTime: TimeInterval
     public let hasControllingTerminal: Bool
+    /// 有效用户 ID。0 是 root。
+    public let userID: uid_t
 
     public init(
         pid: pid_t,
@@ -21,7 +23,8 @@ public struct ProcessTreeEntry: Equatable {
         executablePath: String? = nil,
         cpuTime: TimeInterval? = nil,
         startTime: TimeInterval = 0,
-        hasControllingTerminal: Bool = false
+        hasControllingTerminal: Bool = false,
+        userID: uid_t = getuid()
     ) {
         self.pid = pid
         self.parentPID = parentPID
@@ -31,6 +34,7 @@ public struct ProcessTreeEntry: Equatable {
         self.cpuTime = cpuTime
         self.startTime = startTime
         self.hasControllingTerminal = hasControllingTerminal
+        self.userID = userID
     }
 
     public init(pid: pid_t, parentPID: pid_t, residentMemoryBytes: UInt64) {
@@ -166,7 +170,8 @@ public struct ProcessTreeSnapshot: Equatable {
                 executablePath: pathLength > 0 ? String(cString: pathBuffer) : nil,
                 cpuTime: usage?.cpuTime,
                 startTime: startTime(of: process),
-                hasControllingTerminal: process.kp_eproc.e_tdev != -1
+                hasControllingTerminal: process.kp_eproc.e_tdev != -1,
+                userID: process.kp_eproc.e_ucred.cr_uid
             )
         }
     }

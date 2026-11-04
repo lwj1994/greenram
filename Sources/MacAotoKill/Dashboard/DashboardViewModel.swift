@@ -6,6 +6,7 @@ import MacAotoKillCore
 enum MainPage: String, CaseIterable, Hashable {
     case overview
     case apps
+    case systemProcesses
     case events
     case autoQuit
     case idleTimes
@@ -53,6 +54,9 @@ struct DashboardState: Equatable {
     var apps: [DashboardApp] = []
     var idleChildGroupCount = 0
     var idleChildMemoryBytes: UInt64 = 0
+    /// nil 表示还没采样完。
+    var systemProcesses: SystemProcessSummary?
+    var suspectedLeakPIDs: Set<pid_t> = []
     var events: [EventLogEntry] = []
     var frontmostApp: FrontmostAppInfo?
     var isCheckingForUpdates = false
@@ -80,6 +84,7 @@ protocol DashboardActions: AnyObject {
     func setWhitelisted(_ isWhitelisted: Bool, bundleID: String)
     func setAutoQuit(_ isAutoQuit: Bool, bundleID: String)
     func forceQuit(pid: pid_t)
+    func forceQuitSystemProcess(pid: pid_t)
     func openMainWindow(page: MainPage?)
     func checkForUpdates()
     func exportLogs()
@@ -121,6 +126,7 @@ final class DashboardViewModel: StateViewModel<DashboardState> {
     func setWhitelisted(_ isWhitelisted: Bool, bundleID: String) { actions?.setWhitelisted(isWhitelisted, bundleID: bundleID) }
     func setAutoQuit(_ isAutoQuit: Bool, bundleID: String) { actions?.setAutoQuit(isAutoQuit, bundleID: bundleID) }
     func forceQuit(_ app: DashboardApp) { actions?.forceQuit(pid: app.pid) }
+    func forceQuitSystemProcess(_ process: SystemProcessUsage) { actions?.forceQuitSystemProcess(pid: process.pid) }
     func openMainWindow(page: MainPage? = nil) { actions?.openMainWindow(page: page) }
     func checkForUpdates() { actions?.checkForUpdates() }
     func exportLogs() { actions?.exportLogs() }
