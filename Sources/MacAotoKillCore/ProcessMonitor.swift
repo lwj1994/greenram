@@ -20,10 +20,11 @@ public final class ProcessMonitor {
         let processTree = ProcessTreeSnapshot.capture()
         lastProcessTree = processTree
 
+        // 菜单栏 App（.accessory）也算 App，否则它和它的子进程会被归进系统进程。
         return NSWorkspace.shared.runningApplications
             .compactMap { app -> AppRuntimeState? in
                 guard
-                    app.activationPolicy == .regular,
+                    app.activationPolicy != .prohibited,
                     !app.isTerminated,
                     let bundleID = app.bundleIdentifier
                 else {

@@ -10,6 +10,8 @@
 
 ## Current Cleanup Strategy
 
+App 指 `activationPolicy` 为 `.regular` 或 `.accessory` 的运行中 App，菜单栏 App 也算。
+
 GreenRAM 当前按三组规则判断某个 App 是否可清理：
 
 - 白名单 App 永不清理。
